@@ -1,0 +1,50 @@
+<!--
+  Copyright 2020, Bart Butenaers
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<script type="text/javascript">
+    RED.nodes.registerType('voice2json-stt',{
+        category: 'Voice2Json',
+        color: '#ff758d',
+        defaults: {
+            name: {value:""},
+            voice2JsonConfig: {value:"", type: "voice2json-config"}
+        },          
+        inputs:1,
+        outputs:1,
+        icon: "font-awesome/fa-font",
+        label: function() {
+            return this.name || "Voice2Json STT";
+        },
+        oneditsave: function() {
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="voice2json-stt">
+    <div class="form-row">
+        <label for="node-input-voice2JsonConfig"><i class="fa fa-cog"></i> Voice2Json</label>
+        <!-- Node-Red will replace this input element by a drop-down (with available voice2Json configurations) -->
+        <input type="text" id="node-input-voice2JsonConfig">
+    </div>
+    <br>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="voice2json-stt">
+    <p>A node to offer STT (speech to text) via Voice2Json.</p>
+    <p><strong>Config:</strong><br/>
+    The Voice2Json configuration.</p>
+</script>
+

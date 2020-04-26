@@ -1,0 +1,46 @@
+<!--
+  Copyright 2020, Bart Butenaers
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<script type="text/javascript">
+    RED.nodes.registerType('voice2json-config',{
+        category: 'config',
+        color: '#ff758d',
+        defaults: {
+            profilePath: {value:"", required:true},
+            name: {value:""}
+        },
+        inputs:1,
+        outputs:1,
+        icon: "fluid.png",
+        label: function() { 
+            return this.name || "Voice2Json config";
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="voice2json-config">
+    <div class="form-row">
+        <label for="node-config-input-profilePath"><i class="fa fa-file"></i> Profile</label>
+        <input type="text" id="node-config-input-profilePath">
+    </div>
+    <br>
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="voice2json-config">
+    <p>A config node for all Voice2Json related nodes.</p>
+    <p><strong>Profile:</strong><br/>
+    The path to the downloaded profile.</p>
+</script>
