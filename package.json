@@ -1,0 +1,40 @@
+{
+    "name": "node-red-contrib-voice2json",
+    "version": "1.0.0",
+    "description": "Node-RED nodes for local speech and intent recognition via voice2json",
+    "dependencies": {
+    },
+    "author": {
+        "name": "Bart Butenaers"
+    },
+    "contributors": [
+        {
+            "name": "Johannes Kropf",
+            "url": "https://github.com/johanneskropf"
+        }
+    ],
+    "license": "Apache-2.0",
+    "keywords": [
+        "node-red",
+        "compass",
+        "cardinal",
+        "direction",
+        "degree"
+    ],
+    "bugs": {
+        "url": "https://github.com/bartbutenaers/node-red-contrib-voice2json/issues"
+    },
+    "homepage": "https://github.com/bartbutenaers/node-red-contrib-voice2json",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/bartbutenaers/node-red-contrib-voice2json.git"
+    },
+    "node-red": {
+        "nodes": {
+            "voice2json-config": "voice2json_config.js",
+            "voice2json-stt": "voice2json_stt.js",
+            "voice2json-training": "voice2json_training.js",
+            "voice2json-tti": "voice2json_tti.js"
+        }
+    }
+}
