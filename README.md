@@ -1,5 +1,7 @@
 # node-red-contrib-voice2json
-Node-RED nodes for local speech and intent recognition via voice2json
+Node-RED nodes for local speech and intent recognition via voice2json.
+
+Thanks to [Johannes Kropf](https://github.com/johanneskropf), my partner in crime for this node!  He has provided the idea of integrating Voice2Json in Node-RED.
 
 ## Install
 Run the following npm command in your Node-RED user directory (typically ~/.node-red):
