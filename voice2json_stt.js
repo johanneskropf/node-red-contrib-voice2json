@@ -1,3 +1,4 @@
+  
 /**
  * Copyright 2020 Bart Butenaers & Johannes Kropf
  *
@@ -15,56 +16,82 @@
  **/
  module.exports = function(RED) {
     var settings = RED.settings;
+    const { exec } = require("child_process");
     
     function Voice2JsonSpeechToTextNode(config) {
         RED.nodes.createNode(this, config);
-        
+        this.outputField = config.outputField;
+        this.profilePath = ""; //todo add check for length at execution
+
         var node = this;
-        
-        const { exec } = require("child_process");
-     
-        let profilePath = ""; //todo add check for length at execution
-     
+
         // Retrieve the config node
         node.voice2JsonConfig = RED.nodes.getNode(config.voice2JsonConfig);
         
         if (node.voice2JsonConfig) {
-            profilePath = node.voice2JsonConfig.profilePath;
+            // Use the profile path which has been specified in the config node
+            this.profilePath = node.voice2JsonConfig.profilePath;
         }
 
         node.on("input", function(msg) {
+            if(node.childProcess) {
+                console.log("Ignore input message because the previous message is not processed yet");
+                return;
+            }
+                
             node.status({fill:"blue",shape:"dot",text:"working..."});
+            
             const filePath = msg.payload;
-            const voice2json = "voice2json --profile " + profilePath + " transcribe-wav " + filePath;
-            exec(voice2json, (error, stdout, stderr) => {
+            const voice2json = "voice2json --profile " + node.profilePath + " transcribe-wav " + filePath;
+            
+            node.childProcess = exec(voice2json, (error, stdout, stderr) => {
+                let outputValue;
+                
+                delete node.childProcess;
+                
+                setTimeout(() => {
+                    node.status({});
+                },1000);
+                
                 if (error) {
                     node.error(error.message);
                     node.status({fill:"red",shape:"dot",text:"error"});
-                    setTimeout(function(){
-                       node.status({});
-                    },1000);
                     return;
                 }
                 if (stderr) {
                     node.error(stderr);
                     node.status({fill:"red",shape:"dot",text:"error"});
-                    setTimeout(function(){
-                       node.status({});
-                    },1000);
                     return;
                 }
-                const output = JSON.parse(stdout);
-                const msg = {payload: output};
-                send(msg);
+                
+                try {
+                    outputValue = JSON.parse(stdout);
+                }
+                catch(error) {
+                    node.error("Error parsing json output : " + error.message);
+                    return;
+                }
+                
+                try {
+                    // Set the converted value in the specified message field (of the original input message)
+                    RED.util.setMessageProperty(msg, node.outputField, outputValue, true);
+                } catch(err) {
+                    node.error("Error setting value in msg." + node.outputField + " : " + err.message);
+                    return;
+                }
+            
+                node.send(msg);
                 node.status({fill:"green",shape:"dot",text:"success"});
-                setTimeout(() => {
-                    node.status({});
-                },1000);
                 return;
             });
         });
         
-        node.on("close",function() { 
+        node.on("close",function() {
+            node.status({});
+            if(node.childProcess) {
+                node.childProcess.kill();
+                delete node.childProcess;
+            }
         });
     }
     RED.nodes.registerType("voice2json-stt", Voice2JsonSpeechToTextNode);
