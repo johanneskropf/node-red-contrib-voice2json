@@ -21,13 +21,44 @@
         
         var node = this;
         
+        const { exec } = require("child_process");
+        
         // Retrieve the config node
         node.voice2JsonConfig = RED.nodes.getNode(config.voice2JsonConfig);
         
         if (node.voice2JsonConfig) {
+            const profilePath = node.voice2JsonConfig.profilePath;
         }
 
-        node.on("input", function(msg) {  
+        node.on("input", function(msg) {
+            const filePath = msg.payload;
+            const voice2json = "voice2json --profile " + profilePath + " transcribe-wav " + filePath;
+            exec(voice2json, (error, stdout, stderr) => {
+                if (error) {
+                    node.error(error.message);
+                    node.status({fill:"red",shape:"dot",text:"error"});
+                    setTimeout(function(){
+                       node.status({});
+                    },1000);
+                    return;
+                }
+                if (stderr) {
+                    node.error(stderr);
+                    node.status({fill:"red",shape:"dot",text:"error"});
+                    setTimeout(function(){
+                       node.status({});
+                    },1000);
+                    return;
+                }
+                const output = JSON.parse(stdout);
+                const msg = {payload: output};
+                send(msg);
+                node.status({fill:"green",shape:"dot",text:"success"});
+                setTimeout(function(){
+                    node.status({});
+                },1000);
+                return;
+            });
         });
         
         node.on("close",function() { 
