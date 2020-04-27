@@ -27,10 +27,12 @@
         node.voice2JsonConfig = RED.nodes.getNode(config.voice2JsonConfig);
         
         if (node.voice2JsonConfig) {
-            const profilePath = node.voice2JsonConfig.profilePath;
+            //const profilePath = node.voice2JsonConfig.profilePath; havent got this working
         }
 
         node.on("input", function(msg) {
+            node.status({fill:"blue",shape:"dot",text:"working..."});
+            const profilePath = msg.topic; //stop gap to make it tryable
             const filePath = msg.payload;
             const voice2json = "voice2json --profile " + profilePath + " transcribe-wav " + filePath;
             exec(voice2json, (error, stdout, stderr) => {
@@ -54,7 +56,7 @@
                 const msg = {payload: output};
                 send(msg);
                 node.status({fill:"green",shape:"dot",text:"success"});
-                setTimeout(function(){
+                setTimeout(() => {
                     node.status({});
                 },1000);
                 return;
