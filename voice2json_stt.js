@@ -22,17 +22,18 @@
         var node = this;
         
         const { exec } = require("child_process");
-        
+     
+        let profilePath = ""; //todo add check for length at execution
+     
         // Retrieve the config node
         node.voice2JsonConfig = RED.nodes.getNode(config.voice2JsonConfig);
         
         if (node.voice2JsonConfig) {
-            //const profilePath = node.voice2JsonConfig.profilePath; havent got this working
+            profilePath = node.voice2JsonConfig.profilePath;
         }
 
         node.on("input", function(msg) {
             node.status({fill:"blue",shape:"dot",text:"working..."});
-            const profilePath = msg.topic; //stop gap to make it tryable
             const filePath = msg.payload;
             const voice2json = "voice2json --profile " + profilePath + " transcribe-wav " + filePath;
             exec(voice2json, (error, stdout, stderr) => {
