@@ -20,6 +20,7 @@
     
     function Voice2JsonTextToIntentNode(config) {
         RED.nodes.createNode(this, config);
+        this.inputField  = config.inputField;
         this.outputField = config.outputField;
         this.profilePath = ""; //todo add check for length at execution
         this.validPath = false;
@@ -39,6 +40,8 @@
         }
 
         node.on("input", function(msg) {
+            let textToAnalyze;
+            
             if(node.childProcess) {
                 let warnmsg = "Ignoring input message because the previous message is not processed yet";
                 console.log(warnmsg);
@@ -54,11 +57,27 @@
                 },1500);
                 return;
             }
+            
+            try {
+                // Get the (spoken) text to analyze from the specified message field
+                textToAnalyze = RED.util.getMessageProperty(msg, node.inputField);
+            } 
+            catch(err) {
+                node.error("Error getting text to analyze from msg." + node.inputField + " : " + err.message);
+                return;
+            }
+            
+            if (!textToAnalyze || textToAnalyze === "" || typeof textToAnalyze !== 'string') {
+                node.error("The msg." + node.inputField + " should contain a text to analyze");
+                return;
+            }
                 
+            // Convert the text to a JSON string for voice2json
+            textToAnalyze = "'" + JSON.stringify(textToAnalyze) + "'";
+            
             node.status({fill:"blue",shape:"dot",text:"working..."});
             
-            const text = "'" + JSON.stringify(msg.payload) + "'";
-            const voice2json = "voice2json --profile " + node.profilePath + " recognize-intent " + text;
+            const voice2json = "voice2json --profile " + node.profilePath + " recognize-intent " + textToAnalyze;
             
             node.childProcess = exec(voice2json, (error, stdout, stderr) => {
                 let outputValue;
