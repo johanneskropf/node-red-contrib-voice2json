@@ -57,7 +57,7 @@
                 
             node.status({fill:"blue",shape:"dot",text:"working..."});
             
-            const text = JSON.stringify(msg.payload);
+            const text = "'" + JSON.stringify(msg.payload) + "'";
             const voice2json = "voice2json --profile " + node.profilePath + " recognize-intent " + text;
             
             node.childProcess = exec(voice2json, (error, stdout, stderr) => {
