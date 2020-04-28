@@ -30,7 +30,7 @@
         
         if (node.voice2JsonConfig) {
             // Use the profile path which has been specified in the config node
-            this.profilePath = node.voice2JsonConfig.profilePath;
+            node.profilePath = node.voice2JsonConfig.profilePath;
         }
 
         node.on("input", function(msg) {
@@ -51,7 +51,7 @@
                 
                 setTimeout(() => {
                     node.status({});
-                },1000);
+                },1500);
                 
                 if (error) {
                     node.error(error.message);
