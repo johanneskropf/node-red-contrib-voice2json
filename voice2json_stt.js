@@ -35,7 +35,7 @@
             node.profilePath = node.voice2JsonConfig.profilePath;
             //check path
             if (fs.existsSync(node.profilePath)){
-                node.validpath = true;
+                node.validPath = true;
             }
         }
 
