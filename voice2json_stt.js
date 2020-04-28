@@ -41,7 +41,9 @@
 
         node.on("input", function(msg) {
             if(node.childProcess) {
-                console.log("Ignore input message because the previous message is not processed yet");
+                let warnmsg = "Ignoring input message because the previous message is not processed yet";
+                console.log(warnmsg);
+                node.warn(warnmsg);
                 return;
             }
             
