@@ -21,6 +21,7 @@
     
     function Voice2JsonSpeechToTextNode(config) {
         RED.nodes.createNode(this, config);
+        this.inputField  = config.inputField;
         this.outputField = config.outputField;
         this.profilePath = ""; //todo add check for length at execution
         this.validPath = false;
@@ -40,6 +41,8 @@
         }
 
         node.on("input", function(msg) {
+            let filePath;
+            
             if(node.childProcess) {
                 let warnmsg = "Ignoring input message because the previous message is not processed yet";
                 console.log(warnmsg);
@@ -55,10 +58,33 @@
                 },1500);
                 return;
             }
+                            
+            if (node.inputType === "msg") {
+                try {
+                    // Get the file path from the specified message field
+                    filePath = RED.util.getMessageProperty(msg, node.inputField);
+                } 
+                catch(err) {
+                    node.error("Error getting file path from msg." + node.inputField + " : " + err.message);
+                    return;
+                }
                 
+                if (!filePath || filePath === "" || typeof myVar !== 'string') {
+                    node.error("The msg." + node.inputField + " should contain a file path");
+                    return;
+                }
+            }
+            else { // str
+                filePath = node.inputField;
+            }
+
+            if (!fs.existsSync(filePath)){
+                node.error("The file path does not exist");
+                return;
+            }
+            
             node.status({fill:"blue",shape:"dot",text:"working..."});
             
-            const filePath = msg.payload;
             const voice2json = "voice2json --profile " + node.profilePath + " transcribe-wav " + filePath;
             
             node.childProcess = exec(voice2json, (error, stdout, stderr) => {
