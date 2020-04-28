@@ -23,7 +23,7 @@
         RED.nodes.createNode(this, config);
         this.outputField = config.outputField;
         this.profilePath = ""; //todo add check for length at execution
-        this.validpath = false;
+        this.validPath = false;
 
         var node = this;
 
@@ -51,6 +51,7 @@
                 setTimeout(() => {
                     node.status({});
                 },1500);
+                return;
             }
                 
             node.status({fill:"blue",shape:"dot",text:"working..."});
