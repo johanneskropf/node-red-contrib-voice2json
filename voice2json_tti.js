@@ -15,22 +15,99 @@
  **/
  module.exports = function(RED) {
     var settings = RED.settings;
+    const { exec } = require("child_process");
+    const fs = require("fs");
     
     function Voice2JsonTextToIntentNode(config) {
         RED.nodes.createNode(this, config);
-        
+        this.outputField = config.outputField;
+        this.profilePath = ""; //todo add check for length at execution
+        this.validPath = false;
+
         var node = this;
         
         // Retrieve the config node
         node.voice2JsonConfig = RED.nodes.getNode(config.voice2JsonConfig);
         
         if (node.voice2JsonConfig) {
+            // Use the profile path which has been specified in the config node
+            node.profilePath = node.voice2JsonConfig.profilePath;
+            //check path
+            if (fs.existsSync(node.profilePath)){
+                node.validPath = true;
+            }
         }
 
-        node.on("input", function(msg) {  
+        node.on("input", function(msg) {
+            if(node.childProcess) {
+                let warnmsg = "Ignoring input message because the previous message is not processed yet";
+                console.log(warnmsg);
+                node.warn(warnmsg);
+                return;
+            }
+            
+            if(!node.validPath){
+                node.error("Profile path doesn't exist. Please check the profile path");
+                node.status({fill:"red",shape:"dot",text:"profile path error"});
+                setTimeout(() => {
+                    node.status({});
+                },1500);
+                return;
+            }
+                
+            node.status({fill:"blue",shape:"dot",text:"working..."});
+            
+            const text = msg.payload;
+            const voice2json = "voice2json --profile " + node.profilePath + " recognize-intent " + text;
+            
+            node.childProcess = exec(voice2json, (error, stdout, stderr) => {
+                let outputValue;
+                
+                delete node.childProcess;
+                
+                setTimeout(() => {
+                    node.status({});
+                },1500);
+                
+                if (error) {
+                    node.error(error.message);
+                    node.status({fill:"red",shape:"dot",text:"error"});
+                    return;
+                }
+                if (stderr) {
+                    node.error(stderr);
+                    node.status({fill:"red",shape:"dot",text:"stderr:error"});
+                    return;
+                }
+                
+                try {
+                    outputValue = JSON.parse(stdout);
+                }
+                catch(error) {
+                    node.error("Error parsing json output : " + error.message);
+                    return;
+                }
+                
+                try {
+                    // Set the converted value in the specified message field (of the original input message)
+                    RED.util.setMessageProperty(msg, node.outputField, outputValue, true);
+                } catch(err) {
+                    node.error("Error setting value in msg." + node.outputField + " : " + err.message);
+                    return;
+                }
+            
+                node.send(msg);
+                node.status({fill:"green",shape:"dot",text:"success"});
+                return;
+            });
         });
         
-        node.on("close",function() { 
+        node.on("close",function() {
+            node.status({});
+            if(node.childProcess) {
+                node.childProcess.kill();
+                delete node.childProcess;
+            }
         });
     }
     RED.nodes.registerType("voice2json-tti", Voice2JsonTextToIntentNode);
