@@ -17,11 +17,13 @@
  module.exports = function(RED) {
     var settings = RED.settings;
     const { exec } = require("child_process");
+    const fs = require("fs");
     
     function Voice2JsonSpeechToTextNode(config) {
         RED.nodes.createNode(this, config);
         this.outputField = config.outputField;
         this.profilePath = ""; //todo add check for length at execution
+        this.validpath = false;
 
         var node = this;
 
@@ -31,12 +33,24 @@
         if (node.voice2JsonConfig) {
             // Use the profile path which has been specified in the config node
             node.profilePath = node.voice2JsonConfig.profilePath;
+            //check path
+            if (fs.existsSync(node.profilePath)){
+                node.validpath = true;
+            }
         }
 
         node.on("input", function(msg) {
             if(node.childProcess) {
                 console.log("Ignore input message because the previous message is not processed yet");
                 return;
+            }
+            
+            if(!node.validPath){
+                node.error("Profile path doesn't exist. Please check the profile path");
+                node.status({fill:"red",shape:"dot",text:"profile path error"});
+                setTimeout(() => {
+                    node.status({});
+                },1500);
             }
                 
             node.status({fill:"blue",shape:"dot",text:"working..."});
@@ -60,7 +74,7 @@
                 }
                 if (stderr) {
                     node.error(stderr);
-                    node.status({fill:"red",shape:"dot",text:"error"});
+                    node.status({fill:"red",shape:"dot",text:"stderr:error"});
                     return;
                 }
                 
