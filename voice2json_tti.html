@@ -17,6 +17,7 @@
         defaults: {
             name: {value:""},
             voice2JsonConfig: {value:"", type: "voice2json-config"},
+            inputField: {value:"payload", required:true},
             outputField: {value:"payload", required:true}
         },          
         inputs:1,
@@ -26,16 +27,26 @@
             return this.name || "Voice2Json TTI";
         },
         oneditprepare: function() {
+            // Show the inputField value in a typedinput element (dropdown with only 'msg')
+            var inputValue = $("#node-input-inputField").val() || '';
+            $("#node-input-typed-inputField").typedInput({types:['msg']});
+            $("#node-input-typed-inputField").typedInput('type','msg');
+            $("#node-input-typed-inputField").typedInput('value',inputValue);
+            
             // Show the outputField value in a typedinput element (dropdown with only 'msg')
-            var value = $("#node-input-outputField").val() || '';
+            var outputValue = $("#node-input-outputField").val() || '';
             $("#node-input-typed-outputField").typedInput({types:['msg']});
             $("#node-input-typed-outputField").typedInput('type','msg');
-            $("#node-input-typed-outputField").typedInput('value',value);
+            $("#node-input-typed-outputField").typedInput('value',outputValue);
         },
         oneditsave: function() {
+            // Copy the inputField value from the typedinput element to the inputField element
+            var inputValue = $("#node-input-typed-inputField").typedInput('value');
+            $("#node-input-inputField").val(inputValue);
+            
             // Copy the outputField value from the typedinput element to the outputField element
-            var value = $("#node-input-typed-outputField").typedInput('value');
-            $("#node-input-outputField").val(value);
+            var outputValue = $("#node-input-typed-outputField").typedInput('value');
+            $("#node-input-outputField").val(outputValue);
         }
     });
 </script>
@@ -45,6 +56,11 @@
         <label for="node-input-voice2JsonConfig"><i class="fa fa-cog"></i> Voice2Json</label>
         <!-- Node-Red will replace this input element by a drop-down (with available voice2Json configurations) -->
         <input type="text" id="node-input-voice2JsonConfig">
+    </div>
+    <div class="form-row">
+        <label for="node-input-typed-inputField"><i class="fa fa-sign-in"></i> Input field</label>
+        <input id="node-input-typed-inputField" type="text" style="width: 70%">
+        <input id="node-input-inputField" type="hidden">
     </div>
     <div class="form-row">
         <label for="node-input-typed-outputField"><i class="fa fa-sign-out"></i> Output field</label>
