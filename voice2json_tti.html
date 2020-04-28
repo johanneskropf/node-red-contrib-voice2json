@@ -16,7 +16,8 @@
         color: '#ff758d',
         defaults: {
             name: {value:""},
-            voice2JsonConfig: {value:"", type: "voice2json-config"}
+            voice2JsonConfig: {value:"", type: "voice2json-config"},
+            outputField: {value:"payload", required:true}
         },          
         inputs:1,
         outputs:1,
@@ -64,4 +65,3 @@
     <p><strong>Config:</strong><br/>
     The name of the field in the output message, where the JSON result will be stored.</p>
 </script>
-
