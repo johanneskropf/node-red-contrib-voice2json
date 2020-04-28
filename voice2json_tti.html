@@ -24,7 +24,17 @@
         label: function() {
             return this.name || "Voice2Json TTI";
         },
+        oneditprepare: function() {
+            // Show the outputField value in a typedinput element (dropdown with only 'msg')
+            var value = $("#node-input-outputField").val() || '';
+            $("#node-input-typed-outputField").typedInput({types:['msg']});
+            $("#node-input-typed-outputField").typedInput('type','msg');
+            $("#node-input-typed-outputField").typedInput('value',value);
+        },
         oneditsave: function() {
+            // Copy the outputField value from the typedinput element to the outputField element
+            var value = $("#node-input-typed-outputField").typedInput('value');
+            $("#node-input-outputField").val(value);
         }
     });
 </script>
@@ -35,6 +45,11 @@
         <!-- Node-Red will replace this input element by a drop-down (with available voice2Json configurations) -->
         <input type="text" id="node-input-voice2JsonConfig">
     </div>
+    <div class="form-row">
+        <label for="node-input-typed-outputField"><i class="fa fa-sign-out"></i> Output field</label>
+        <input id="node-input-typed-outputField" type="text" style="width: 70%">
+        <input id="node-input-outputField" type="hidden">
+    </div>   
     <br>
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
@@ -46,5 +61,7 @@
     <p>A node to offer TTI (text to intent) via Voice2Json.</p>
     <p><strong>Config:</strong><br/>
     The Voice2Json configuration.</p>
+    <p><strong>Config:</strong><br/>
+    The name of the field in the output message, where the JSON result will be stored.</p>
 </script>
 
