@@ -16,7 +16,8 @@
         color: '#ff758d',
         defaults: {
             name: {value:""},
-            voice2JsonConfig: {value:"", type: "voice2json-config"}
+            voice2JsonConfig: {value:"", type: "voice2json-config"},
+            sentences: {value:""}
         },          
         inputs:1,
         outputs:1,
@@ -24,7 +25,76 @@
         label: function() {
             return this.name || "Voice2Json training";
         },
+        oneditprepare: function() {
+            var node = this;
+            
+            node.aceEditor = RED.editor.createEditor({
+                id: 'aceDiv',
+                mode: 'ace/mode/json',
+                value: node.sentences,
+                globals: { 
+                    msg:true,
+                    context:true,
+                    RED: true,
+                    util: true,
+                    flow: true,
+                    global: true,
+                    console: true,
+                    Buffer: true,
+                    setTimeout: true,
+                    clearTimeout: true,
+                    setInterval: true,
+                    clearInterval: true
+                }
+            });
+            
+            node.aceEditor.focus();
+            node.aceEditor.setFontSize(14); 
+
+            // Show a button to expand the aceDiv element
+            var expandAceDivButton = $('#node-expand-aceDiv');
+            var aceDiv = $("#aceDiv");
+            var aceDivFullScreenRequest = aceDiv[0].requestFullscreen       || 
+                                          aceDiv[0].mozRequestFullScreen    || 
+                                          aceDiv[0].webkitRequestFullscreen || 
+                                          aceDiv[0].msRequestFullScreen;
+            // Check whether the browser supports fullscreen
+            if (aceDivFullScreenRequest) {
+                expandAceDivButton[0].title = "Expand fullscreen";
+                expandAceDivButton.click(function(e) {
+                    e.preventDefault();
+        
+                    // Make sure (on all browsers) that the aceDiv DIV element has 100% AFTER it has become fullscreen
+                    // If document.fullscreenElement is null then full-screen mode has been quitted...
+                    aceDiv.on('webkitfullscreenchange mozfullscreenchange msRequestFullscreen fullscreenchange', function(e) {
+                        if (document.fullscreenElement) {
+                            // Make sure the blockly area fills the entire screen
+                            document.fullscreenElement.style.height = "100%";
+                        }
+                        else {
+                            // Resize the blockly area to its original size
+                            aceDiv[0].style.height = "450px";
+                            //resize(node);
+                        }
+                    });
+                    
+                    // Expand the aceDiv element to fullscreen
+                    aceDivFullScreenRequest.call(aceDiv[0]);
+                })
+            }
+            else {
+                expandAceDivButton.title = "Fullscreen not supported";
+                expandAceDivButton.prop('disabled', true);
+            }
+        },
         oneditsave: function() {
+            node.sentences = node.aceEditor.getValue();
+            node.aceEditor.destroy();
+            node.aceEditor = null;
+        },
+        oneditsave: function() {
+            node.aceEditor.destroy();
+            node.aceEditor = null;
         }
     });
 </script>
@@ -34,6 +104,13 @@
         <label for="node-input-voice2JsonConfig"><i class="fa fa-cog"></i> Voice2Json</label>
         <!-- Node-Red will replace this input element by a drop-down (with available voice2Json configurations) -->
         <input type="text" id="node-input-voice2JsonConfig">
+    </div>
+    <br>
+    <div class="form-row">
+        <button id="node-expand-aceDiv" class="editor-button editor-button-small" style="margin-top: 4px;">
+            <i class="fa fa-expand"></i>
+        </button>
+        <div id="aceDiv" style="width: 100%; height: 450px; min-height:350px;"></div>
     </div>
     <br>
     <div class="form-row">
