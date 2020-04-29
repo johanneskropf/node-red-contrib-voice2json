@@ -18,6 +18,7 @@
     
     function Voice2JsonTrainingNode(config) {
         RED.nodes.createNode(this, config);
+        this.sentences = config.sentences;
         
         var node = this;
         
