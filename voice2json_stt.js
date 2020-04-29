@@ -69,7 +69,7 @@
                     return;
                 }
                 
-                if (!filePath || filePath === "" || typeof myVar !== 'string') {
+                if (!filePath || filePath === "" || typeof filePath !== 'string') {
                     node.error("The msg." + node.inputField + " should contain a file path");
                     return;
                 }
