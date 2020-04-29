@@ -17,7 +17,9 @@
         defaults: {
             name: {value:""},
             voice2JsonConfig: {value:"", type: "voice2json-config"},
-            sentences: {value:""}
+            sentences: {value:"// Enter sentences (= voice commands) Node-RED should recognize.\n" +
+                              "// The sentences be written in a dedicated template language.\n" +
+                              "// See the language syntax on http://voice2json.org/sentences.html"}
         },          
         inputs:1,
         outputs:1,
@@ -27,7 +29,7 @@
         },
         oneditprepare: function() {
             var node = this;
-            
+
             node.aceEditor = RED.editor.createEditor({
                 id: 'aceDiv',
                 mode: 'ace/mode/text',
@@ -88,11 +90,13 @@
             }
         },
         oneditsave: function() {
+            var node = this;
             node.sentences = node.aceEditor.getValue();
             node.aceEditor.destroy();
             node.aceEditor = null;
         },
-        oneditsave: function() {
+        oneditcancel: function() {
+            var node = this;
             node.aceEditor.destroy();
             node.aceEditor = null;
         }
