@@ -25,7 +25,14 @@
         this.outputField = config.outputField;
         this.profilePath = ""; //todo add check for length at execution
         this.validPath = false;
-
+      
+        function node_error_status(errtext){
+            node.status({fill:"red",shape:"dot",text:errtext});
+            setTimeout(() => {
+                node.status({});
+            },1500);
+        }
+      
         var node = this;
 
         // Retrieve the config node
@@ -52,10 +59,7 @@
             
             if(!node.validPath){
                 node.error("Profile path doesn't exist. Please check the profile path");
-                node.status({fill:"red",shape:"dot",text:"profile path error"});
-                setTimeout(() => {
-                    node.status({});
-                },1500);
+                node_error_status("profile path error");
                 return;
             }
                             
@@ -66,11 +70,13 @@
                 } 
                 catch(err) {
                     node.error("Error getting file path from msg." + node.inputField + " : " + err.message);
+                    node_error_status("couldn't get file path from msg");
                     return;
                 }
                 
                 if (!filePath || filePath === "" || typeof filePath !== 'string') {
                     node.error("The msg." + node.inputField + " should contain a file path");
+                    node_error_status("file path format is not valid");
                     return;
                 }
             }
@@ -80,6 +86,7 @@
 
             if (!fs.existsSync(filePath)){
                 node.error("The file path does not exist");
+                node_error_status("file path does not exist");
                 return;
             }
             
