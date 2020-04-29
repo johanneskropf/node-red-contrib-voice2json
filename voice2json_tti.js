@@ -75,7 +75,7 @@
             }
             
             if (!textToAnalyze.text || textToAnalyze.text === "" || typeof textToAnalyze.text !== 'string') {
-                node.error("The msg." + node.inputField + " should contain a text to analyze");
+                node.error("The msg." + node.inputField + " should contain a string with text to analyze");
                 node_error_status("msg did not contain valid text");
                 return;
             }
