@@ -24,6 +24,13 @@
         this.outputField = config.outputField;
         this.profilePath = ""; //todo add check for length at execution
         this.validPath = false;
+     
+        function node_error_status(errtext){
+            node.status({fill:"red",shape:"dot",text:errtext});
+            setTimeout(() => {
+                node.status({});
+            },1500);
+        }
 
         var node = this;
         
@@ -40,7 +47,9 @@
         }
 
         node.on("input", function(msg) {
-            let textToAnalyze;
+            let textToAnalyze = {
+                text:""
+            };
             
             if(node.childProcess) {
                 let warnmsg = "Ignoring input message because the previous message is not processed yet";
@@ -51,24 +60,23 @@
             
             if(!node.validPath){
                 node.error("Profile path doesn't exist. Please check the profile path");
-                node.status({fill:"red",shape:"dot",text:"profile path error"});
-                setTimeout(() => {
-                    node.status({});
-                },1500);
+                node_error_status("profile path error");
                 return;
             }
             
             try {
                 // Get the (spoken) text to analyze from the specified message field
-                textToAnalyze = RED.util.getMessageProperty(msg, node.inputField);
+                textToAnalyze.text = RED.util.getMessageProperty(msg, node.inputField);
             } 
             catch(err) {
                 node.error("Error getting text to analyze from msg." + node.inputField + " : " + err.message);
+                node_error_status("couldn't get text from msg");
                 return;
             }
             
-            if (!textToAnalyze || textToAnalyze === "" || typeof textToAnalyze !== 'string') {
+            if (!textToAnalyze.text || textToAnalyze.text === "" || typeof textToAnalyze.text !== 'string') {
                 node.error("The msg." + node.inputField + " should contain a text to analyze");
+                node_error_status("msg did not contain valid text");
                 return;
             }
                 
