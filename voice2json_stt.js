@@ -22,6 +22,7 @@
     function Voice2JsonSpeechToTextNode(config) {
         RED.nodes.createNode(this, config);
         this.inputField  = config.inputField;
+        this.inputType = config.inputType;
         this.outputField = config.outputField;
         this.profilePath = ""; //todo add check for length at execution
         this.validPath = false;
