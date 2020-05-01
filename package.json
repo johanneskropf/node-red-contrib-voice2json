@@ -34,7 +34,8 @@
             "voice2json-config": "voice2json_config.js",
             "voice2json-stt": "voice2json_stt.js",
             "voice2json-training": "voice2json_training.js",
-            "voice2json-tti": "voice2json_tti.js"
+            "voice2json-tti": "voice2json_tti.js",
+            "voice2json-record": "voice2json_record.js"
         }
     }
 }
