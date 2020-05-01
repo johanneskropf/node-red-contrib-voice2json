@@ -24,16 +24,21 @@
         this.outputField = config.outputField;
         this.profilePath = ""; //todo add check for length at execution
         this.validPath = false;
+        this.statusTimer = false;
+        var node = this;
      
-        function node_error_status(errtext){
-            node.status({fill:"red",shape:"dot",text:errtext});
-            setTimeout(() => {
+        function node_status(text,color,shape,time){
+            node.status({fill:color,shape:shape,text:text});
+            if(node.statusTimer !== false){
+                clearTimeout(node.statusTimer);
+                node.statusTimer = false;
+            }
+            node.statusTimer = setTimeout(() => {
                 node.status({});
-            },1500);
+                node.statusTimer = false;
+            },time);
         }
 
-        var node = this;
-        
         // Retrieve the config node
         node.voice2JsonConfig = RED.nodes.getNode(config.voice2JsonConfig);
         
@@ -60,7 +65,7 @@
             
             if(!node.validPath){
                 node.error("Profile path doesn't exist. Please check the profile path");
-                node_error_status("profile path error");
+                node_status("profile path error","red","dot",1500);
                 return;
             }
             
@@ -70,20 +75,20 @@
             } 
             catch(err) {
                 node.error("Error getting text to analyze from msg." + node.inputField + " : " + err.message);
-                node_error_status("couldn't get text from msg");
+                node_status("error getting text from msg","red","dot",1500);
                 return;
             }
             
             if (!textToAnalyze.text || textToAnalyze.text === "" || typeof textToAnalyze.text !== 'string') {
                 node.error("The msg." + node.inputField + " should contain a string with text to analyze");
-                node_error_status("msg did not contain valid text");
+                node_status("error: msg did not contain valid text","red","dot",1500);
                 return;
             }
                 
             // Convert the text to a JSON string for voice2json
             textToAnalyze = "'" + JSON.stringify(textToAnalyze) + "'";
             
-            node.status({fill:"blue",shape:"dot",text:"working..."});
+            node_status("processing...","blue","dot",15000);
             
             const voice2json = "voice2json --profile " + node.profilePath + " recognize-intent " + textToAnalyze;
             
@@ -92,18 +97,14 @@
                 
                 delete node.childProcess;
                 
-                setTimeout(() => {
-                    node.status({});
-                },1500);
-                
                 if (error) {
                     node.error(error.message);
-                    node.status({fill:"red",shape:"dot",text:"error"});
+                    node_status("error","red","dot",1500);
                     return;
                 }
                 if (stderr) {
                     node.error(stderr);
-                    node.status({fill:"red",shape:"dot",text:"stderr:error"});
+                    node_status("stderr:error","red","dot",1500);
                     return;
                 }
                 
@@ -112,6 +113,7 @@
                 }
                 catch(error) {
                     node.error("Error parsing json output : " + error.message);
+                    node_status("error parsing json","red","dot",1500);
                     return;
                 }
                 
@@ -120,17 +122,22 @@
                     RED.util.setMessageProperty(msg, node.outputField, outputValue, true);
                 } catch(err) {
                     node.error("Error setting value in msg." + node.outputField + " : " + err.message);
+                    node_status("error","red","dot",1500);
                     return;
                 }
             
                 node.send(msg);
-                node.status({fill:"green",shape:"dot",text:"success"});
+                node_status("success","green","dot",1500);
                 return;
             });
         });
         
         node.on("close",function() {
-            node.status({});
+            if(node.statusTimer !== false){
+               clearTimeout(node.statusTimer);
+               node.statusTimer = false;
+               node.status({});
+            }
             if(node.childProcess) {
                 node.childProcess.kill();
                 delete node.childProcess;
