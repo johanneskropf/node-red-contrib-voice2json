@@ -19,7 +19,9 @@
             voice2JsonConfig: {value:"", type: "voice2json-config"},
             sentences: {value:"// Enter sentences (= voice commands) Node-RED should recognize.\n" +
                               "// The sentences be written in a dedicated template language.\n" +
-                              "// See the language syntax on http://voice2json.org/sentences.html"}
+                              "// See the language syntax on http://voice2json.org/sentences.html"},
+            inputField: {value:"payload", required:true},
+            outputField: {value:"payload", required:true}
         },          
         inputs:1,
         outputs:1,
@@ -29,6 +31,18 @@
         },
         oneditprepare: function() {
             var node = this;
+            
+            // Show the inputField value in a typedinput element (dropdown with only 'msg')
+            var inputValue = $("#node-input-inputField").val() || '';
+            $("#node-input-typed-inputField").typedInput({types:['msg']});
+            $("#node-input-typed-inputField").typedInput('type',node.inputType);
+            $("#node-input-typed-inputField").typedInput('value',inputValue);
+            
+            // Show the outputField value in a typedinput element (dropdown with only 'msg')
+            var outputValue = $("#node-input-outputField").val() || '';
+            $("#node-input-typed-outputField").typedInput({types:['msg']});
+            $("#node-input-typed-outputField").typedInput('type','msg');
+            $("#node-input-typed-outputField").typedInput('value',outputValue);
 
             node.aceEditor = RED.editor.createEditor({
                 id: 'aceDiv',
@@ -91,6 +105,18 @@
         },
         oneditsave: function() {
             var node = this;
+            
+            // Copy the inputField value from the typedinput element to the inputField element
+            var inputValue = $("#node-input-typed-inputField").typedInput('value');
+            $("#node-input-inputField").val(inputValue);
+            
+            // Store also the input type
+            node.inputType = $("#node-input-typed-inputField").typedInput('type');
+            
+            // Copy the outputField value from the typedinput element to the outputField element
+            var outputValue = $("#node-input-typed-outputField").typedInput('value');
+            $("#node-input-outputField").val(outputValue);
+            
             node.sentences = node.aceEditor.getValue();
             node.aceEditor.destroy();
             node.aceEditor = null;
@@ -108,6 +134,16 @@
         <label for="node-input-voice2JsonConfig"><i class="fa fa-cog"></i> Voice2Json</label>
         <!-- Node-Red will replace this input element by a drop-down (with available voice2Json configurations) -->
         <input type="text" id="node-input-voice2JsonConfig">
+    </div>
+    <div class="form-row">
+        <label for="node-input-typed-inputField"><i class="fa fa-sign-in"></i> Input field</label>
+        <input id="node-input-typed-inputField" type="text" style="width: 70%">
+        <input id="node-input-inputField" type="hidden">
+    </div>  
+    <div class="form-row">
+        <label for="node-input-typed-outputField"><i class="fa fa-sign-out"></i> Output field</label>
+        <input id="node-input-typed-outputField" type="text" style="width: 70%">
+        <input id="node-input-outputField" type="hidden">
     </div>
     <br>
     <div class="form-row">
