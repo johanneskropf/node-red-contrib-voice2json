@@ -103,9 +103,10 @@
                 expandAceDivButton.prop('disabled', true);
             }
             //get the content of sentences ini over http endpoint 1st draft
-            $.get("voice2json-training/sentences", function(data){
+            $.getJSON("voice2json-training/sentences", function(data){
                 node.aceEditor.setValue(data);
-                node.aceEditor.setReadOnly(true); //set to read only for now
+                node.aceEditor.clearSelection();
+                node.aceEditor.setReadOnly(true);
                 return;
             });
         },
