@@ -128,6 +128,7 @@
     
     RED.httpAdmin.get("/voice2json-training/sentences", function(req, res){
         //let fileContent = fs.readFileSync("/home/pi/dekaldiold/sentences.ini", 'utf8');
+        console.log(req.query.profilePath); //this is the data we send from the client with the request
         let fileContent = "in the future the content of your sentences.ini will be here";
         res.json(fileContent);
     });
