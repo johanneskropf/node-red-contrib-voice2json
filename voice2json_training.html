@@ -102,6 +102,11 @@
                 expandAceDivButton.title = "Fullscreen not supported";
                 expandAceDivButton.prop('disabled', true);
             }
+            //get the content of sentences ini over http endpoint 1st draft
+            $.get("voice2json-training/sentences", function(data){
+                node.aceEditor.setValue(data);
+                return;
+            });
         },
         oneditsave: function() {
             var node = this;
