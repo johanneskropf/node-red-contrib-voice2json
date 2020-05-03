@@ -103,7 +103,7 @@
                 expandAceDivButton.prop('disabled', true);
             }
             //get the content of sentences ini over http endpoint 1st draft
-            $.getJSON("voice2json-training/sentences", function(data){
+            $.getJSON("voice2json-training/sentences", {profilePath:"we want the profile path here"}, function(data){
                 node.aceEditor.setValue(data);
                 node.aceEditor.clearSelection();
                 node.aceEditor.setReadOnly(true);
