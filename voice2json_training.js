@@ -125,4 +125,10 @@
         });
     }
     RED.nodes.registerType("voice2json-training", Voice2JsonTrainingNode);
+    
+    RED.httpAdmin.get("/voice2json-training/sentences", function(req, res){
+        //let fileContent = fs.readFileSync("/home/pi/dekaldiold/sentences.ini", 'utf8');
+        let fileContent = "in the future the content of your sentences.ini will be here";
+        res.send(fileContent);
+    });
 }
