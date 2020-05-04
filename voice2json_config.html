@@ -17,7 +17,8 @@
         defaults: {
             profilePath: {value:"", required:true},
             name: {value:""},
-            sentencesToSave: {value:""}
+            sentencesToSave: {value:""},
+            slots: {value:[]}
         },
         inputs:1,
         outputs:1,
@@ -60,36 +61,64 @@
             node.aceEditor.focus();
             node.aceEditor.setFontSize(14);
             node.aceEditor.setReadOnly(true);
+            node.originalSentences = data;
+            
+            // Create a table of slots
+            var slotsList = $("#node-input-slots-container").css('min-height','150px').css('min-width','450px').editableList({
+                header: $("<div>").append($.parseHTML(
+                   "<div style='width:17%; margin-left:5px; display: inline-grid'><b>File name</b></div>" +
+                   "<div style='width:20%; margin-left:5px; display: inline-grid'><b>File content</b></div>")),
+                addItem: function(container, i, slot) {
+                    // Add a new row to the editableList
+                    var row = $('<div/>').appendTo(container);
+                    
+                    // Column 1 : Add an input field (type string) to the new row, that represents the file name
+                    var fileNameField = $('<input/>',{class:"node-input-slot-fileName",type:"text",placeholder:"File name"}).css({"width":"17%","margin-left":"5px","margin-right":"5px"}).appendTo(row);
+                    fileNameField.val(slot.fileName);
+                    
+                    // Column 2 : Add a textarea field (type string) to the new row, that represents the file content
+                    var fileContentField = $('<textarea/>',{class:"node-input-slot-fileName",type:"text",placeholder:"File name"}).css({"width":"17%","margin-left":"5px","margin-right":"5px"}).appendTo(row);
+                    fileContentField.val(slot.fileContent);
+                },
+                removable: true
+            });
+            
+            // Show all the slots (stored in this node) into the editableList
+            if (this.slots) {
+                this.slots.forEach(function (slot, index) {
+                    slotsList.editableList('addItem', {fileName:slot.fileName, fileContent:slot.fileContent});
+                });
+            }
 
             // Show a button to expand the aceDiv element
             var expandAceDivButton = $('#node-expand-aceDiv');
-            var aceDiv = $("#aceDiv");
-            var aceDivFullScreenRequest = aceDiv[0].requestFullscreen       || 
-                                          aceDiv[0].mozRequestFullScreen    || 
-                                          aceDiv[0].webkitRequestFullscreen || 
-                                          aceDiv[0].msRequestFullScreen;
+            var expandableArea = $("#expandable_area");
+            var aceDivFullScreenRequest = expandableArea[0].requestFullscreen       || 
+                                          expandableArea[0].mozRequestFullScreen    || 
+                                          expandableArea[0].webkitRequestFullscreen || 
+                                          expandableArea[0].msRequestFullScreen;
             // Check whether the browser supports fullscreen
             if (aceDivFullScreenRequest) {
                 expandAceDivButton[0].title = "Expand fullscreen";
                 expandAceDivButton.click(function(e) {
                     e.preventDefault();
         
-                    // Make sure (on all browsers) that the aceDiv DIV element has 100% AFTER it has become fullscreen
+                    // Make sure (on all browsers) that the expandableArea DIV element has 100% AFTER it has become fullscreen
                     // If document.fullscreenElement is null then full-screen mode has been quitted...
-                    aceDiv.on('webkitfullscreenchange mozfullscreenchange msRequestFullscreen fullscreenchange', function(e) {
+                    expandableArea.on('webkitfullscreenchange mozfullscreenchange msRequestFullscreen fullscreenchange', function(e) {
                         if (document.fullscreenElement) {
                             // Make sure the blockly area fills the entire screen
                             document.fullscreenElement.style.height = "100%";
                         }
                         else {
                             // Resize the blockly area to its original size
-                            aceDiv[0].style.height = "450px";
+                            expandableArea[0].style.height = "450px";
                             //resize(node);
                         }
                     });
                     
-                    // Expand the aceDiv element to fullscreen
-                    aceDivFullScreenRequest.call(aceDiv[0]);
+                    // Expand the expandableArea element to fullscreen
+                    aceDivFullScreenRequest.call(expandableArea[0]);
                 })
             }
             else {
@@ -114,12 +143,29 @@
 	                node.aceEditor.setValue(data);
 	                node.aceEditor.clearSelection();
 	                node.aceEditor.setReadOnly(false);
-	                node.originalSentences = data;
 	                return;
 	            });
 	            //update line above editor to show which sentences ini is loaded
 	            $("#node-loadedProfile").text("loaded sentences.ini from: " + loadProfilePath);
 	        });
+            
+            // Show two tabsheets
+            var tabs = RED.tabs.create({
+                id: "node-tabsheet-tabs",
+                onchange: function(tab) {
+                    // Show only the content (i.e. the children) of the selected tabsheet, and hide the others
+                    $("#node-tabsheet-content").children().hide();
+                    $("#" + tab.id).show();
+                }
+            });
+            tabs.addTab({
+                id: "node-sentences-tab",
+                label: "Sentences"
+            });
+            tabs.addTab({
+                id: "node-slots-tab",
+                label: "Slots"
+            });
         },
         oneditsave: function() {
             var node = this;
@@ -135,6 +181,17 @@
 		    
             node.aceEditor.destroy();
             node.aceEditor = null;
+            
+            // Copy all the slots from the editableList to this node
+            node.slots = [];
+            var slotsList = $("#node-input-slots-container").editableList('items');
+            slotsList.each(function(i) {
+                var slot = $(this);
+                var fileName = slot.find(".node-input-slot-fileName").val();
+                var fileContent = slot.find(".node-input-slot-fileContent").val();
+                
+                node.slots.push({fileName:fileName, fileContent:fileContent});
+            });
         },
         oneditcancel: function() {
             var node = this;
@@ -160,7 +217,26 @@
         <button id="node-expand-aceDiv" class="editor-button editor-button-small" style="margin-top: 4px;">
             <i class="fa fa-expand"></i>
         </button>
-        <div id="aceDiv" style="width: 100%; height: 450px; min-height:350px;"></div>
+    </div>
+    <div id="expandable_area">
+        <div class="form-row">
+            <!-- Two tabsheets -->
+            <ul style="background: #fff; min-width: 600px; margin-bottom: 20px;" id="node-tabsheet-tabs"></ul>
+        </div>
+        <div id="node-tabsheet-content" style="min-height: 350px">
+            <div id="node-sentences-tab">
+                <div class="form-row">
+                    <!-- Ace editor -->
+                    <div id="aceDiv" style="width: 100%; height: 450px; min-height:350px;"></div>
+                </div>
+            </div>
+            <div id="node-slots-tab">
+                <div class="form-row form-row-auto-height">
+                    <!-- Table with slot files -->
+                    <ol id="node-input-slots-container"></ol>
+                </div>
+            </div>
+        </div>
     </div>
     <br>
     <div class="form-row">
