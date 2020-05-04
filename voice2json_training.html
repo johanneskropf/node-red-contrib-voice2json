@@ -17,11 +17,15 @@
         defaults: {
             name: {value:""},
             voice2JsonConfig: {value:"", type: "voice2json-config"},
-            sentences: {value:"// Enter sentences (= voice commands) Node-RED should recognize.\n" +
-                              "// The sentences be written in a dedicated template language.\n" +
+            sentences: {value:"// Select a profile and click the load sentences button.\n"+
+                              "// This will load the content of the sentences.ini in the selected profile.\n"+
+                              "// Changes will only be saved if you deploy the training node after editing.\n"+
+                              "// Enter sentences (= voice commands) Node-RED should recognize.\n" +
+                              "// The sentences have to be written in a dedicated templating language.\n" +
                               "// See the language syntax on http://voice2json.org/sentences.html"},
             inputField: {value:"payload", required:true},
-            outputField: {value:"payload", required:true}
+            outputField: {value:"payload", required:true},
+            loadedProfile: {value:""}
         },          
         inputs:1,
         outputs:1,
@@ -65,7 +69,8 @@
             });
             
             node.aceEditor.focus();
-            node.aceEditor.setFontSize(14); 
+            node.aceEditor.setFontSize(14);
+            node.aceEditor.setReadOnly(true);
 
             // Show a button to expand the aceDiv element
             var expandAceDivButton = $('#node-expand-aceDiv');
@@ -102,13 +107,25 @@
                 expandAceDivButton.title = "Fullscreen not supported";
                 expandAceDivButton.prop('disabled', true);
             }
-            //get the content of sentences ini over http endpoint 1st draft
-            $.getJSON("voice2json-training/sentences", {profilePath:"we want the profile path here"}, function(data){
-                node.aceEditor.setValue(data);
-                node.aceEditor.clearSelection();
-                node.aceEditor.setReadOnly(true);
-                return;
-            });
+            
+            $("#node-input-loadSentences").click(function () {
+	            //get the content of sentences ini over http endpoint 1st draft
+	            let configNodeId = $("#node-input-voice2JsonConfig").val();
+	            console.log(configNodeId);
+	            if (!configNodeId) {
+	                return;
+	            }
+	            let configNode = RED.nodes.node(configNodeId);
+	            node.loadedProfile = configNode.profilePath;
+	            $.getJSON("voice2json-training/loadSentences", {profilePath:node.loadedProfile}, function(data){
+	                node.aceEditor.setValue(data);
+	                node.aceEditor.clearSelection();
+	                node.aceEditor.setReadOnly(false);
+	                return;
+	            });
+	            //update line above editor to show which sentences ini is loaded
+	            $("#node-loadedProfile").text("loaded sentences.ini from: " + node.loadedProfile);
+	        });
         },
         oneditsave: function() {
             var node = this;
@@ -153,6 +170,13 @@
         <input id="node-input-outputField" type="hidden">
     </div>
     <br>
+    <div class="form-row">
+        <p>load the sentences.ini from the selected profile:</p>
+        <button id="node-input-loadSentences"><i class="fa fa-exchange"></i> Load </button>
+    </div>
+    <div class="form-row">
+        <p id="node-loadedProfile">no sentences.ini loaded yet</p>
+    </div>
     <div class="form-row">
         <button id="node-expand-aceDiv" class="editor-button editor-button-small" style="margin-top: 4px;">
             <i class="fa fa-expand"></i>
