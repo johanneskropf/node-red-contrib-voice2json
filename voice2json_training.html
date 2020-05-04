@@ -17,12 +17,12 @@
         defaults: {
             name: {value:""},
             voice2JsonConfig: {value:"", type: "voice2json-config"},
-            sentences: {value:"// Select a profile and click the load sentences button.\n"+
+            /*sentences: {value:"// Select a profile and click the load sentences button.\n"+
                               "// This will load the content of the sentences.ini in the selected profile.\n"+
                               "// Changes will only be saved if you deploy the training node after editing.\n"+
                               "// Enter sentences (= voice commands) Node-RED should recognize.\n" +
                               "// The sentences have to be written in a dedicated templating language.\n" +
-                              "// See the language syntax on http://voice2json.org/sentences.html"},
+                              "// See the language syntax on http://voice2json.org/sentences.html"},*/
             inputField: {value:"payload", required:true},
             outputField: {value:"payload", required:true},
             loadedProfile: {value:""}
@@ -48,7 +48,7 @@
             $("#node-input-typed-outputField").typedInput('type','msg');
             $("#node-input-typed-outputField").typedInput('value',outputValue);
 
-            node.aceEditor = RED.editor.createEditor({
+            /*node.aceEditor = RED.editor.createEditor({
                 id: 'aceDiv',
                 mode: 'ace/mode/text',
                 value: node.sentences,
@@ -125,7 +125,7 @@
 	            });
 	            //update line above editor to show which sentences ini is loaded
 	            $("#node-loadedProfile").text("loaded sentences.ini from: " + node.loadedProfile);
-	        });
+	        });*/
         },
         oneditsave: function() {
             var node = this;
@@ -141,14 +141,14 @@
             var outputValue = $("#node-input-typed-outputField").typedInput('value');
             $("#node-input-outputField").val(outputValue);
             
-            node.sentences = node.aceEditor.getValue();
+            /*node.sentences = node.aceEditor.getValue();
             node.aceEditor.destroy();
-            node.aceEditor = null;
+            node.aceEditor = null;*/
         },
         oneditcancel: function() {
             var node = this;
-            node.aceEditor.destroy();
-            node.aceEditor = null;
+            /*node.aceEditor.destroy();
+            node.aceEditor = null;*/
         }
     });
 </script>
@@ -169,7 +169,7 @@
         <input id="node-input-typed-outputField" type="text" style="width: 70%">
         <input id="node-input-outputField" type="hidden">
     </div>
-    <br>
+    <!--<br>
     <div class="form-row">
         <p>load the sentences.ini from the selected profile:</p>
         <button id="node-input-loadSentences"><i class="fa fa-exchange"></i> Load </button>
@@ -182,7 +182,7 @@
             <i class="fa fa-expand"></i>
         </button>
         <div id="aceDiv" style="width: 100%; height: 450px; min-height:350px;"></div>
-    </div>
+    </div>-->
     <br>
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>

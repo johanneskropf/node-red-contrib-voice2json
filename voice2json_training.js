@@ -126,8 +126,8 @@
     }
     RED.nodes.registerType("voice2json-training", Voice2JsonTrainingNode);
     
-    RED.httpAdmin.get("/voice2json-training/loadSentences", RED.auth.needsPermission('voice2json-training.read'), function(req, res){
+    /*RED.httpAdmin.get("/voice2json-training/loadSentences", RED.auth.needsPermission('voice2json-training.read'), function(req, res){
         let fileContent = fs.readFileSync(req.query.profilePath + "/sentences.ini", 'utf8');
         res.json(fileContent);
-    });
+    });*/
 }
