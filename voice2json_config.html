@@ -16,13 +16,124 @@
         color: '#ff758d',
         defaults: {
             profilePath: {value:"", required:true},
-            name: {value:""}
+            name: {value:""},
+            sentencesToSave: {value:""}
         },
         inputs:1,
         outputs:1,
         icon: "fluid.png",
         label: function() { 
             return this.name || "Voice2Json config";
+        },
+        oneditprepare: function() {
+            var node = this;
+            
+            //initial text before file was loaded or after redeploy
+            node.initialSentences = "// Click the load sentences button.\n"+
+                            "// This will load the content of the sentences.ini\n"+
+                            "// Changes will only be saved to the file\n"+
+                            "// if you deploy after editing.\n"+
+                            "// Enter sentences (= voice commands) Node-RED should recognize.\n" +
+                            "// The sentences have to be written in a dedicated templating language.\n" +
+                            "// See the language syntax on http://voice2json.org/sentences.html";
+            
+            node.aceEditor = RED.editor.createEditor({
+                id: 'aceDiv',
+                mode: 'ace/mode/text',
+                value: node.initialSentences,
+                globals: { 
+                    msg:true,
+                    context:true,
+                    RED: true,
+                    util: true,
+                    flow: true,
+                    global: true,
+                    console: true,
+                    Buffer: true,
+                    setTimeout: true,
+                    clearTimeout: true,
+                    setInterval: true,
+                    clearInterval: true
+                }
+            });
+            
+            node.aceEditor.focus();
+            node.aceEditor.setFontSize(14);
+            node.aceEditor.setReadOnly(true);
+
+            // Show a button to expand the aceDiv element
+            var expandAceDivButton = $('#node-expand-aceDiv');
+            var aceDiv = $("#aceDiv");
+            var aceDivFullScreenRequest = aceDiv[0].requestFullscreen       || 
+                                          aceDiv[0].mozRequestFullScreen    || 
+                                          aceDiv[0].webkitRequestFullscreen || 
+                                          aceDiv[0].msRequestFullScreen;
+            // Check whether the browser supports fullscreen
+            if (aceDivFullScreenRequest) {
+                expandAceDivButton[0].title = "Expand fullscreen";
+                expandAceDivButton.click(function(e) {
+                    e.preventDefault();
+        
+                    // Make sure (on all browsers) that the aceDiv DIV element has 100% AFTER it has become fullscreen
+                    // If document.fullscreenElement is null then full-screen mode has been quitted...
+                    aceDiv.on('webkitfullscreenchange mozfullscreenchange msRequestFullscreen fullscreenchange', function(e) {
+                        if (document.fullscreenElement) {
+                            // Make sure the blockly area fills the entire screen
+                            document.fullscreenElement.style.height = "100%";
+                        }
+                        else {
+                            // Resize the blockly area to its original size
+                            aceDiv[0].style.height = "450px";
+                            //resize(node);
+                        }
+                    });
+                    
+                    // Expand the aceDiv element to fullscreen
+                    aceDivFullScreenRequest.call(aceDiv[0]);
+                })
+            }
+            else {
+                expandAceDivButton.title = "Fullscreen not supported";
+                expandAceDivButton.prop('disabled', true);
+            }
+            
+            //get the internal copy if empty do nothing
+            $.getJSON("voice2json-config/getSentences", function(data){
+	            if(data.length !== 0){
+	                node.aceEditor.setValue(data);
+	                node.aceEditor.clearSelection();
+	                node.aceEditor.setReadOnly(false);
+	            }
+	            return;
+	        });
+            
+            $("#node-input-loadSentences").click(function () {
+	            //get the content of sentences ini over http endpoint 1st draft
+	            let loadProfilePath = $("#node-config-input-profilePath").val();
+	            $.getJSON("voice2json-config/loadSentences", {profilePath:loadProfilePath}, function(data){
+	                node.aceEditor.setValue(data);
+	                node.aceEditor.clearSelection();
+	                node.aceEditor.setReadOnly(false);
+	                return;
+	            });
+	            //update line above editor to show which sentences ini is loaded
+	            $("#node-loadedProfile").text("loaded sentences.ini from: " + loadProfilePath);
+	        });
+        },
+        oneditsave: function() {
+            var node = this;
+            
+            //get the content of ace and check if the sentences.ini was loaded
+            node.sentencesToSave = node.aceEditor.getValue();
+            if(node.sentencesToSave != node.initialSentences){
+	            $.getJSON("voice2json-config/saveSentences", {sentences:node.sentencesToSave}, function(data){
+		            console.log(data);
+		            return;
+		        });
+		    }
+		    
+            node.aceEditor.destroy();
+            node.aceEditor = null;
         }
     });
 </script>
@@ -31,6 +142,19 @@
     <div class="form-row">
         <label for="node-config-input-profilePath"><i class="fa fa-file"></i> Profile</label>
         <input type="text" id="node-config-input-profilePath">
+    </div>
+    <br>
+    <div class="form-row">
+        <button id="node-input-loadSentences"><i class="fa fa-exchange"></i> Load the sentences.ini for this profile </button>
+    </div>
+    <div class="form-row">
+        <p id="node-loadedProfile">the sentences.ini is not loaded yet</p>
+    </div>
+    <div class="form-row">
+        <button id="node-expand-aceDiv" class="editor-button editor-button-small" style="margin-top: 4px;">
+            <i class="fa fa-expand"></i>
+        </button>
+        <div id="aceDiv" style="width: 100%; height: 450px; min-height:350px;"></div>
     </div>
     <br>
     <div class="form-row">
