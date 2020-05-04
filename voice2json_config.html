@@ -114,6 +114,7 @@
 	                node.aceEditor.setValue(data);
 	                node.aceEditor.clearSelection();
 	                node.aceEditor.setReadOnly(false);
+	                node.originalSentences = data;
 	                return;
 	            });
 	            //update line above editor to show which sentences ini is loaded
@@ -123,15 +124,20 @@
         oneditsave: function() {
             var node = this;
             
-            //get the content of ace and check if the sentences.ini was loaded
+            //get the content of ace and check if the sentences.ini was loaded and changed
             node.sentencesToSave = node.aceEditor.getValue();
-            if(node.sentencesToSave != node.initialSentences){
+            if(node.sentencesToSave != node.initialSentences && node.sentencesToSave != node.originalSentences){
 	            $.getJSON("voice2json-config/saveSentences", {sentences:node.sentencesToSave}, function(data){
 		            console.log(data);
 		            return;
 		        });
 		    }
 		    
+            node.aceEditor.destroy();
+            node.aceEditor = null;
+        },
+        oneditcancel: function() {
+            var node = this;
             node.aceEditor.destroy();
             node.aceEditor = null;
         }
