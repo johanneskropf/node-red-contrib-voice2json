@@ -61,7 +61,6 @@
             node.aceEditor.focus();
             node.aceEditor.setFontSize(14);
             node.aceEditor.setReadOnly(true);
-            node.originalSentences = data;
             
             // Create a table of slots
             var slotsList = $("#node-input-slots-container").css('min-height','150px').css('min-width','450px').editableList({
@@ -132,6 +131,7 @@
 	                node.aceEditor.setValue(data);
 	                node.aceEditor.clearSelection();
 	                node.aceEditor.setReadOnly(false);
+			node.originalSentences = data;
 	            }
 	            return;
 	        });
