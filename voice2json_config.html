@@ -131,7 +131,6 @@
 	                node.aceEditor.setValue(data);
 	                node.aceEditor.clearSelection();
 	                node.aceEditor.setReadOnly(false);
-			node.originalSentences = data;
 	            }
 	            return;
 	        });
@@ -143,6 +142,7 @@
 	                node.aceEditor.setValue(data);
 	                node.aceEditor.clearSelection();
 	                node.aceEditor.setReadOnly(false);
+			node.originalSentences = data;
 	                return;
 	            });
 	            //update line above editor to show which sentences ini is loaded
