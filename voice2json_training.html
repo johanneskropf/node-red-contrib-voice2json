@@ -17,12 +17,6 @@
         defaults: {
             name: {value:""},
             voice2JsonConfig: {value:"", type: "voice2json-config"},
-            /*sentences: {value:"// Select a profile and click the load sentences button.\n"+
-                              "// This will load the content of the sentences.ini in the selected profile.\n"+
-                              "// Changes will only be saved if you deploy the training node after editing.\n"+
-                              "// Enter sentences (= voice commands) Node-RED should recognize.\n" +
-                              "// The sentences have to be written in a dedicated templating language.\n" +
-                              "// See the language syntax on http://voice2json.org/sentences.html"},*/
             inputField: {value:"payload", required:true},
             outputField: {value:"payload", required:true},
             loadedProfile: {value:""}
@@ -47,85 +41,6 @@
             $("#node-input-typed-outputField").typedInput({types:['msg']});
             $("#node-input-typed-outputField").typedInput('type','msg');
             $("#node-input-typed-outputField").typedInput('value',outputValue);
-
-            /*node.aceEditor = RED.editor.createEditor({
-                id: 'aceDiv',
-                mode: 'ace/mode/text',
-                value: node.sentences,
-                globals: { 
-                    msg:true,
-                    context:true,
-                    RED: true,
-                    util: true,
-                    flow: true,
-                    global: true,
-                    console: true,
-                    Buffer: true,
-                    setTimeout: true,
-                    clearTimeout: true,
-                    setInterval: true,
-                    clearInterval: true
-                }
-            });
-            
-            node.aceEditor.focus();
-            node.aceEditor.setFontSize(14);
-            node.aceEditor.setReadOnly(true);
-
-            // Show a button to expand the aceDiv element
-            var expandAceDivButton = $('#node-expand-aceDiv');
-            var aceDiv = $("#aceDiv");
-            var aceDivFullScreenRequest = aceDiv[0].requestFullscreen       || 
-                                          aceDiv[0].mozRequestFullScreen    || 
-                                          aceDiv[0].webkitRequestFullscreen || 
-                                          aceDiv[0].msRequestFullScreen;
-            // Check whether the browser supports fullscreen
-            if (aceDivFullScreenRequest) {
-                expandAceDivButton[0].title = "Expand fullscreen";
-                expandAceDivButton.click(function(e) {
-                    e.preventDefault();
-        
-                    // Make sure (on all browsers) that the aceDiv DIV element has 100% AFTER it has become fullscreen
-                    // If document.fullscreenElement is null then full-screen mode has been quitted...
-                    aceDiv.on('webkitfullscreenchange mozfullscreenchange msRequestFullscreen fullscreenchange', function(e) {
-                        if (document.fullscreenElement) {
-                            // Make sure the blockly area fills the entire screen
-                            document.fullscreenElement.style.height = "100%";
-                        }
-                        else {
-                            // Resize the blockly area to its original size
-                            aceDiv[0].style.height = "450px";
-                            //resize(node);
-                        }
-                    });
-                    
-                    // Expand the aceDiv element to fullscreen
-                    aceDivFullScreenRequest.call(aceDiv[0]);
-                })
-            }
-            else {
-                expandAceDivButton.title = "Fullscreen not supported";
-                expandAceDivButton.prop('disabled', true);
-            }
-            
-            $("#node-input-loadSentences").click(function () {
-	            //get the content of sentences ini over http endpoint 1st draft
-	            let configNodeId = $("#node-input-voice2JsonConfig").val();
-	            console.log(configNodeId);
-	            if (!configNodeId) {
-	                return;
-	            }
-	            let configNode = RED.nodes.node(configNodeId);
-	            node.loadedProfile = configNode.profilePath;
-	            $.getJSON("voice2json-training/loadSentences", {profilePath:node.loadedProfile}, function(data){
-	                node.aceEditor.setValue(data);
-	                node.aceEditor.clearSelection();
-	                node.aceEditor.setReadOnly(false);
-	                return;
-	            });
-	            //update line above editor to show which sentences ini is loaded
-	            $("#node-loadedProfile").text("loaded sentences.ini from: " + node.loadedProfile);
-	        });*/
         },
         oneditsave: function() {
             var node = this;
@@ -140,15 +55,9 @@
             // Copy the outputField value from the typedinput element to the outputField element
             var outputValue = $("#node-input-typed-outputField").typedInput('value');
             $("#node-input-outputField").val(outputValue);
-            
-            /*node.sentences = node.aceEditor.getValue();
-            node.aceEditor.destroy();
-            node.aceEditor = null;*/
         },
         oneditcancel: function() {
             var node = this;
-            /*node.aceEditor.destroy();
-            node.aceEditor = null;*/
         }
     });
 </script>
