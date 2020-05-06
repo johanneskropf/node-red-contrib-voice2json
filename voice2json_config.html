@@ -31,12 +31,12 @@
             
             //initial text before file was loaded or after redeploy
             node.initialSentences = "// Click the load sentences button.\n"+
-                            "// This will load the content of the sentences.ini\n"+
-                            "// Changes will only be saved to the file\n"+
-                            "// if you deploy after editing.\n"+
-                            "// Enter sentences (= voice commands) Node-RED should recognize.\n" +
-                            "// The sentences have to be written in a dedicated templating language.\n" +
-                            "// See the language syntax on http://voice2json.org/sentences.html";
+                                    "// This will load the content of the sentences.ini\n"+
+                                    "// Changes will only be saved to the file\n"+
+                                    "// if you deploy after editing.\n"+
+                                    "// Enter sentences (= voice commands) Node-RED should recognize.\n" +
+                                    "// The sentences have to be written in a dedicated templating language.\n" +
+                                    "// See the language syntax on http://voice2json.org/sentences.html";
             
             node.aceEditor = RED.editor.createEditor({
                 id: 'aceDiv',
@@ -63,20 +63,20 @@
             node.aceEditor.setReadOnly(true);
             
             // Create a table of slots
-            var slotsList = $("#node-input-slots-container").css('min-height','150px').css('min-width','450px').editableList({
+            var slotsList = $("#node-input-slots-container").css('min-height','350px').css('min-width','450px').editableList({
                 header: $("<div>").append($.parseHTML(
                    "<div style='width:17%; margin-left:5px; display: inline-grid'><b>File name</b></div>" +
                    "<div style='width:20%; margin-left:5px; display: inline-grid'><b>File content</b></div>")),
                 addItem: function(container, i, slot) {
                     // Add a new row to the editableList
-                    var row = $('<div/>').appendTo(container);
+                    var row = $('<div/>').css({"min-height":"150px"}).appendTo(container);
                     
                     // Column 1 : Add an input field (type string) to the new row, that represents the file name
-                    var fileNameField = $('<input/>',{class:"node-input-slot-fileName",type:"text",placeholder:"File name"}).css({"width":"17%","margin-left":"5px","margin-right":"5px"}).appendTo(row);
+                    var fileNameField = $('<input/>',{class:"node-input-slot-fileName",type:"text",placeholder:"File name"}).css({"resize":"none","vertical-align":"top","width":"17%","margin-left":"5px","margin-right":"5px"}).appendTo(row);
                     fileNameField.val(slot.fileName);
                     
                     // Column 2 : Add a textarea field (type string) to the new row, that represents the file content
-                    var fileContentField = $('<textarea/>',{class:"node-input-slot-fileName",type:"text",placeholder:"File name"}).css({"width":"17%","margin-left":"5px","margin-right":"5px"}).appendTo(row);
+                    var fileContentField = $('<textarea/>',{class:"node-input-slot-fileName",type:"text",placeholder:"File content"}).css({"resize":"none","min-height":"140px","width":"75%","margin-left":"5px","margin-right":"5px"}).appendTo(row);
                     fileContentField.val(slot.fileContent);
                 },
                 removable: true
@@ -91,33 +91,33 @@
 
             // Show a button to expand the aceDiv element
             var expandAceDivButton = $('#node-expand-aceDiv');
-            var expandableArea = $("#expandable_area");
-            var aceDivFullScreenRequest = expandableArea[0].requestFullscreen       || 
-                                          expandableArea[0].mozRequestFullScreen    || 
-                                          expandableArea[0].webkitRequestFullscreen || 
-                                          expandableArea[0].msRequestFullScreen;
+            var aceDiv = $("#aceDiv");
+            var aceDivFullScreenRequest = aceDiv[0].requestFullscreen       || 
+                                          aceDiv[0].mozRequestFullScreen    || 
+                                          aceDiv[0].webkitRequestFullscreen || 
+                                          aceDiv[0].msRequestFullScreen;
             // Check whether the browser supports fullscreen
             if (aceDivFullScreenRequest) {
                 expandAceDivButton[0].title = "Expand fullscreen";
                 expandAceDivButton.click(function(e) {
                     e.preventDefault();
         
-                    // Make sure (on all browsers) that the expandableArea DIV element has 100% AFTER it has become fullscreen
+                    // Make sure (on all browsers) that the aceDiv DIV element has 100% AFTER it has become fullscreen
                     // If document.fullscreenElement is null then full-screen mode has been quitted...
-                    expandableArea.on('webkitfullscreenchange mozfullscreenchange msRequestFullscreen fullscreenchange', function(e) {
+                    aceDiv.on('webkitfullscreenchange mozfullscreenchange msRequestFullscreen fullscreenchange', function(e) {
                         if (document.fullscreenElement) {
                             // Make sure the blockly area fills the entire screen
                             document.fullscreenElement.style.height = "100%";
                         }
                         else {
                             // Resize the blockly area to its original size
-                            expandableArea[0].style.height = "450px";
+                            aceDiv[0].style.height = "450px";
                             //resize(node);
                         }
                     });
                     
-                    // Expand the expandableArea element to fullscreen
-                    aceDivFullScreenRequest.call(expandableArea[0]);
+                    // Expand the aceDiv element to fullscreen
+                    aceDivFullScreenRequest.call(aceDiv[0]);
                 })
             }
             else {
@@ -142,11 +142,11 @@
 	                node.aceEditor.setValue(data);
 	                node.aceEditor.clearSelection();
 	                node.aceEditor.setReadOnly(false);
-			node.originalSentences = data;
-	                return;
+                    node.originalSentences = data;
+	                
+                    // Show the tabsheets
+                    $("#filesDiv").show();
 	            });
-	            //update line above editor to show which sentences ini is loaded
-	            $("#node-loadedProfile").text("loaded sentences.ini from: " + loadProfilePath);
 	        });
             
             // Show two tabsheets
@@ -210,21 +210,16 @@
     <div class="form-row">
         <button id="node-input-loadSentences"><i class="fa fa-exchange"></i> Load the sentences.ini for this profile </button>
     </div>
-    <div class="form-row">
-        <p id="node-loadedProfile">the sentences.ini is not loaded yet</p>
-    </div>
-    <div class="form-row">
-        <button id="node-expand-aceDiv" class="editor-button editor-button-small" style="margin-top: 4px;">
-            <i class="fa fa-expand"></i>
-        </button>
-    </div>
-    <div id="expandable_area">
+    <div id="filesDiv" hidden>
         <div class="form-row">
             <!-- Two tabsheets -->
             <ul style="background: #fff; min-width: 600px; margin-bottom: 20px;" id="node-tabsheet-tabs"></ul>
         </div>
         <div id="node-tabsheet-content" style="min-height: 350px">
             <div id="node-sentences-tab">
+                <button id="node-expand-aceDiv" class="editor-button editor-button-small" style="margin-top: 4px;">
+                    <i class="fa fa-expand"></i>
+                </button>
                 <div class="form-row">
                     <!-- Ace editor -->
                     <div id="aceDiv" style="width: 100%; height: 450px; min-height:350px;"></div>
