@@ -131,6 +131,11 @@
 	                node.aceEditor.setValue(data);
 	                node.aceEditor.clearSelection();
 	                node.aceEditor.setReadOnly(false);
+	                
+	                // Show the tabsheets
+                    $("#filesDiv").show();
+                    //change the button text
+                    $("#node-input-loadSentences").html('<i class="fa fa-exchange"></i> reload sentences.ini / changes will be lost ');
 	            }
 	            return;
 	        });
@@ -146,6 +151,8 @@
 	                
                     // Show the tabsheets
                     $("#filesDiv").show();
+                    //change the button text
+                    $("#node-input-loadSentences").html('<i class="fa fa-exchange"></i> reload sentences.ini / changes will be lost ');
 	            });
 	        });
             
