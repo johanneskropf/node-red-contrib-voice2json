@@ -1,0 +1,93 @@
+<!--
+  Copyright 2020, Bart Butenaers & Johannes Kropf
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<script type="text/javascript">
+    RED.nodes.registerType('voice2json-transcribe-stream',{
+        category: 'Voice2Json',
+        color: '#ff758d',
+        defaults: {
+            name: {value:""},
+            voice2JsonConfig: {value:"", type: "voice2json-config"},
+            inputField: {value:"payload", required:true},
+            outputField: {value:"payload", required:true},
+            inputStream: {value:false}
+        },          
+        inputs:1,
+        outputs:1,
+        icon: "font-awesome/fa-font",
+        label: function() {
+            return this.name || "Voice2Json transcribe stream";
+        },
+        oneditprepare: function() {
+            var node = this;
+        
+            // Show the inputField value in a typedinput element (dropdown with only 'msg' and 'str')
+            var inputValue = $("#node-input-inputField").val() || '';
+            $("#node-input-typed-inputField").typedInput({types:['msg']});
+            $("#node-input-typed-inputField").typedInput('type',node.inputType);
+            $("#node-input-typed-inputField").typedInput('value',inputValue);
+            
+            // Show the outputField value in a typedinput element (dropdown with only 'msg')
+            var outputValue = $("#node-input-outputField").val() || '';
+            $("#node-input-typed-outputField").typedInput({types:['msg']});
+            $("#node-input-typed-outputField").typedInput('type','msg');
+            $("#node-input-typed-outputField").typedInput('value',outputValue); 
+        },
+        oneditsave: function() {
+            var node = this;
+            
+            // Copy the inputField value from the typedinput element to the inputField element
+            var inputValue = $("#node-input-typed-inputField").typedInput('value');
+            $("#node-input-inputField").val(inputValue);
+            
+            // Copy the outputField value from the typedinput element to the outputField element
+            var outputValue = $("#node-input-typed-outputField").typedInput('value');
+            $("#node-input-outputField").val(outputValue);
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="voice2json-transcribe-stream">
+    <div class="form-row">
+        <label for="node-input-voice2JsonConfig"><i class="fa fa-cog"></i> Voice2Json</label>
+        <!-- Node-Red will replace this input element by a drop-down (with available voice2Json configurations) -->
+        <input type="text" id="node-input-voice2JsonConfig">
+    </div>
+    <div class="form-row">
+        <label for="node-input-typed-inputField"><i class="fa fa-sign-in"></i> Input field</label>
+        <input id="node-input-typed-inputField" type="text" style="width: 70%">
+        <input id="node-input-inputField" type="hidden">
+    </div>  
+    <div class="form-row">
+        <label for="node-input-typed-outputField"><i class="fa fa-sign-out"></i> Output field</label>
+        <input id="node-input-typed-outputField" type="text" style="width: 70%">
+        <input id="node-input-outputField" type="hidden">
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-inputStream" style="display:inline-block; width: auto; vertical-align:baseline;">
+        <label for="node-input-inputStream" style="width: 70%;"> accept a stream of buffers as audio input? </label>
+    </div>   
+    <br>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="voice2json-transcribe-stream">
+    <p>A node to offer stream to textvia Voice2Json.</p>
+    <p><strong>Config:</strong><br/>
+    The Voice2Json configuration.</p>
+    <p><strong>Config:</strong><br/>
+    The name of the field in the output message, where the JSON result will be stored.</p>
+</script>
