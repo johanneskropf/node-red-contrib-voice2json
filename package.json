@@ -35,7 +35,8 @@
             "voice2json-stt": "voice2json_stt.js",
             "voice2json-training": "voice2json_training.js",
             "voice2json-tti": "voice2json_tti.js",
-            "voice2json-record": "voice2json_record.js"
+            "voice2json-record": "voice2json_record.js",
+            "voice2json-transcribe-stream": "voice2json_transcribestream.js"
         }
     }
 }
