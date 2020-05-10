@@ -26,6 +26,8 @@
         this.inputType = config.inputType;
         this.outputField = config.outputField;
         this.profilePath = "";
+        this.filePath = "";
+        this.inputMsg = null;
         this.statusTimer = false;
         this.statusTimer2 = false;
         this.processingNow = false;
@@ -56,6 +58,26 @@
             },time);
         }
         
+        function saveBufferWrite(msg){
+            node_status("processing...","blue","dot",15000);
+            let randomN = Math.floor(Math.random() * Math.floor(1000));
+            node.filePath = "/dev/shm/stt" + randomN + ".wav";
+            node.warn("saving to: " + node.filePath);
+            try {
+                fs.writeFileSync(node.filePath,node.inputMsg);
+            }
+            catch (error){
+                node.error("error saving to /dev/shm/" + err.message);
+                node_status("couldn't save buffer","red","dot",1500);
+                node_status2("running","blue","ring",1500);
+                return;
+            }
+            node.processingNow = true;
+            node.filePath += "\n";
+            node.transcribeWav.stdin.write(node.filePath);
+            return;
+        }
+        
         function spawnTranscribe(msg){
             try{
                 node.transcribeWav = spawn("voice2json",["--profile",node.profilePath,"transcribe-wav","--stdin-file"]);
@@ -77,6 +99,7 @@
             });
             
             node.transcribeWav.on('close', function (code,signal) {
+                node.processingNow = false;
                 node_status2("stopped","grey","ring",1);
                 return;
             });
@@ -180,9 +203,9 @@
 
         node.on("input", function(msg) {
         
-            let inputMsg = RED.util.getMessageProperty(msg, node.inputField);
+            node.inputMsg = RED.util.getMessageProperty(msg, node.inputField);
             node.msgObj = msg;
-            switch (inputMsg){
+            switch (node.inputMsg){
             
                 case "start":
  
@@ -219,7 +242,11 @@
                     } else if(!node.transcribeWav){
                         node.warn("not started so not processing");
                     } else {
-                        writeStdin(node.msgObj);
+                        if(typeof node.inputMsg == "string"){
+                            writeStdin(node.msgObj);
+                        } else if(Buffer.isBuffer(node.inputMsg)){
+                            saveBufferWrite(node.msgObj);
+                        }
                     }
                     return;
                     
