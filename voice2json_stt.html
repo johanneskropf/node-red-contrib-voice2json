@@ -89,9 +89,16 @@
 </script>
 
 <script type="text/x-red" data-help-name="voice2json-stt">
-    <p>A node to offer STT (speech to text) via Voice2Json.</p>
-    <p><strong>Config:</strong><br/>
-    The Voice2Json configuration.</p>
-    <p><strong>Config:</strong><br/>
+    <p>A node to offer STT (speech to text) on a single WAV voice fragment via Voice2Json.</p>
+    <p><strong>Voice2Json:</strong><br/>
+    The Voice2Json configuration that will be used by this node.</p>
+    <p><strong>Input field:</strong><br/>
+    The name of the field in the input message, where the WAV fragment will be offered.  The input field can contains following types of data:
+        <ul>
+            <li><i>A string:</i> the absolute file path of the WAV file.</li>
+            <li><i>A buffer:</i> the WAV fragment as a binary buffer.</li>
+        </ul>
+    </p>
+    <p><strong>Output field:</strong><br/>
     The name of the field in the output message, where the JSON result will be stored.</p>
 </script>
