@@ -19,7 +19,8 @@
             voice2JsonConfig: {value:"", type: "voice2json-config"},
             inputType: { value:"msg" },
             inputField: {value:"payload", required:true},
-            outputField: {value:"payload", required:true}
+            outputField: {value:"payload", required:true},
+            autoStart: {value:false}
         },          
         inputs:1,
         outputs:1,
@@ -32,7 +33,7 @@
         
             // Show the inputField value in a typedinput element (dropdown with only 'msg' and 'str')
             var inputValue = $("#node-input-inputField").val() || '';
-            $("#node-input-typed-inputField").typedInput({types:['msg', 'str']});
+            $("#node-input-typed-inputField").typedInput({types:['msg']});
             $("#node-input-typed-inputField").typedInput('type',node.inputType);
             $("#node-input-typed-inputField").typedInput('value',inputValue);
             
@@ -74,6 +75,11 @@
         <label for="node-input-typed-outputField"><i class="fa fa-sign-out"></i> Output field</label>
         <input id="node-input-typed-outputField" type="text" style="width: 70%">
         <input id="node-input-outputField" type="hidden">
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-autoStart" style="display:inline-block; width: auto; vertical-align:baseline;">
+        <label for="node-input-autoStart" style="width: 70%;"> auto start on deploy </label>
     </div>   
     <br>
     <div class="form-row">

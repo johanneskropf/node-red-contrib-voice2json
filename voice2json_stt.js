@@ -25,11 +25,12 @@
         this.inputField  = config.inputField;
         this.inputType = config.inputType;
         this.outputField = config.outputField;
-        this.profilePath = ""; //todo add check for length at execution
-        this.validPath = false;
+        this.profilePath = "";
         this.statusTimer = false;
         this.statusTimer2 = false;
         this.processingNow = false;
+        this.autoStart = config.autoStart;
+        this.msgObj = {};
         var node = this;
       
         function node_status(text,color,shape,time){
@@ -62,6 +63,7 @@
             catch (error) {
                 node_status2("error strating","red","ring",1);
                 node.error(error);
+                return;
             }
             
             node_status2("running","blue","ring",1);
@@ -76,6 +78,7 @@
             
             node.transcribeWav.on('close', function (code,signal) {
                 node_status2("stopped","grey","ring",1);
+                return;
             });
             
             node.transcribeWav.stdout.on('data', (data)=>{
@@ -114,7 +117,6 @@
         function writeStdin(msg){
             
             node_status("processing...","blue","dot",15000);
-            node.processingNow = true;
             
             if (node.inputType === "msg") {
                 try {
@@ -142,10 +144,11 @@
             if (!fs.existsSync(node.filePath)){
                 node.error("The file path does not exist");
                 node_status("file path does not exist","red","dot",1500);
-                node_status2("not started","grey","ring",1500);
+                node_status2("running","blue","ring",1500);
                 return;
             }
             
+            node.processingNow = true;
             node.filePath += "\n";
             node.transcribeWav.stdin.write(node.filePath);
             return;
@@ -166,36 +169,61 @@
                 return;
             }
         }
+        
+        if(node.autoStart){
+            node.warn("starting");
+            setTimeout(()=>{
+                spawnTranscribe(node.msgObj);
+                return;
+            }, 1500);
+        }
 
         node.on("input", function(msg) {
         
             let inputMsg = RED.util.getMessageProperty(msg, node.inputField);
+            node.msgObj = msg;
+            switch (inputMsg){
             
-            if(inputMsg === "start"){
-                if(node.transcribeWav){
-                    node.warn("restarting");
-                    node.transcribeWav.kill();
-                    delete node.transcribeWav;
-                } else {
-                    node.warn("starting");
-                }
-                spawnTranscribe(msg);
-                return;
-            } else if(inputMsg === "stop" && node.transcribeWav){
-                node.transcribeWav.kill();
-                delete node.transcribeWav;
-                return;
-            } 
+                case "start":
+ 
+                    if(node.transcribeWav){
+                        node.warn("restarting");
+                        node.transcribeWav.kill();
+                        delete node.transcribeWav;
+                        setTimeout(()=>{
+                            spawnTranscribe(node.msgObj);
+                            return;
+                        }, 1500);
+                    } else {
+                        node.warn("starting");
+                        spawnTranscribe(node.msgObj);
+                    }
+                    return;
+                    
+                case "stop":
+                
+                    if(node.transcribeWav){
+                        node.warn("stopping");
+                        node.transcribeWav.kill();
+                        delete node.transcribeWav;
+                    } else {
+                        node.warn("not running, nothing to stop");
+                    }
+                    return;
+                    
+                default:
             
-            if(node.processingNow == true) {
-                let warnmsg = "Ignoring input message because the previous message is not processed yet";
-                console.log(warnmsg);
-                node.warn(warnmsg);
-                return;
-            }
-            
-            writeStdin(msg);  
-            return;           
+                    if(node.processingNow == true) {
+                        let warnmsg = "Ignoring input message because the previous message is not processed yet";
+                    node.warn(warnmsg);
+                    } else if(!node.transcribeWav){
+                        node.warn("not started so not processing");
+                    } else {
+                        writeStdin(node.msgObj);
+                    }
+                    return;
+                    
+            }  
             
         });
         
