@@ -79,7 +79,7 @@
     <div class="form-row">
         <label>&nbsp;</label>
         <input type="checkbox" id="node-input-autoStart" style="display:inline-block; width: auto; vertical-align:baseline;">
-        <label for="node-input-autoStart" style="width: 70%;"> auto start on deploy </label>
+        <label for="node-input-autoStart" style="width: 70%;"> auto start transcriber</label>
     </div>   
     <br>
     <div class="form-row">
@@ -93,12 +93,20 @@
     <p><strong>Voice2Json:</strong><br/>
     The Voice2Json configuration that will be used by this node.</p>
     <p><strong>Input field:</strong><br/>
-    The name of the field in the input message, where the WAV fragment will be offered.  The input field can contains following types of data:
+    The name of the field in the input message, where the following commands can be specified:
         <ul>
-            <li><i>A string:</i> the absolute file path of the WAV file.</li>
-            <li><i>A buffer:</i> the WAV fragment as a binary buffer.</li>
+            <li><code>start</code> to (re)start the transcriber process.</li>
+            <li><code>stop</code> to stop the transcriber process.</li>
+            <li>The WAV fragment, specified in one of the following formats:
+                <ul>
+                    <li><i>A string:</i> the absolute file path of the WAV file.</li>
+                    <li><i>A buffer:</i> the WAV fragment as a binary buffer.</li>
+                </ul>
+            </li>
         </ul>
     </p>
     <p><strong>Output field:</strong><br/>
     The name of the field in the output message, where the JSON result will be stored.</p>
+    <p><strong>Auto start transcriber:</strong><br/>
+    When selected the transcriber will be started automatically at startup and (re)deploys.</p>
 </script>
