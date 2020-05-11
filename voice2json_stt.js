@@ -33,8 +33,9 @@
         this.processingNow = false;
         this.autoStart = config.autoStart;
         this.msgObj = {};
+        this.fileId = "";
         var node = this;
-      
+        
         function node_status(text,color,shape,time){
             node.status({fill:color,shape:shape,text:text});
             if(node.statusTimer !== false){
@@ -129,9 +130,7 @@
         
         function saveBufferWrite(msg){
             node_status("processing...","blue","dot",15000);
-            let randomN = Math.floor(Math.random() * Math.floor(1000));
-            node.filePath = "/dev/shm/stt" + randomN + ".wav";
-            node.warn("saving to: " + node.filePath);
+            node.filePath = "/dev/shm/stt" + node.fileId + ".wav";
             try {
                 fs.writeFileSync(node.filePath,node.inputMsg);
             }
@@ -231,6 +230,8 @@
             }
         }
         
+        node.fileId = node.id.replace(/\./g,"");
+        
         if(node.autoStart){
             node.warn("starting");
             setTimeout(()=>{
@@ -240,7 +241,7 @@
         }
 
         node.on("input", function(msg) {
-        
+            
             node.inputMsg = RED.util.getMessageProperty(msg, node.inputField);
             node.msgObj = msg;
             switch (node.inputMsg){
