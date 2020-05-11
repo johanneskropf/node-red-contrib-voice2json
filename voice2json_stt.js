@@ -58,26 +58,6 @@
             },time);
         }
         
-        function saveBufferWrite(msg){
-            node_status("processing...","blue","dot",15000);
-            let randomN = Math.floor(Math.random() * Math.floor(1000));
-            node.filePath = "/dev/shm/stt" + randomN + ".wav";
-            node.warn("saving to: " + node.filePath);
-            try {
-                fs.writeFileSync(node.filePath,node.inputMsg);
-            }
-            catch (error){
-                node.error("error saving to /dev/shm/" + err.message);
-                node_status("couldn't save buffer","red","dot",1500);
-                node_status2("running","blue","ring",1500);
-                return;
-            }
-            node.processingNow = true;
-            node.filePath += "\n";
-            node.transcribeWav.stdin.write(node.filePath);
-            return;
-        }
-        
         function spawnTranscribe(msg){
             try{
                 node.transcribeWav = spawn("voice2json",["--profile",node.profilePath,"transcribe-wav","--stdin-file"]);
@@ -91,16 +71,20 @@
             node_status2("running","blue","ring",1);
             
             node.transcribeWav.stderr.on('data', (data)=>{
-                node.processingNow = false;
-                node.error(data.toString());
+                node.error("stderr: " + data.toString());
                 node_status("error","red","dot",1500);
-                node_status2("stopped","grey","ring",1500);
+                if(node.transcribeWav){
+                    node_status2("running","blue","ring",2000);
+                }
                 return;
             });
             
             node.transcribeWav.on('close', function (code,signal) {
                 node.processingNow = false;
-                node_status2("stopped","grey","ring",1);
+                node.transcribeWav.stdin.end();
+                delete node.transcribeWav;
+                node.warn("stopped");
+                node_status2("stopped","grey","ring",2000);
                 return;
             });
             
@@ -115,7 +99,9 @@
                 catch(error) {
                     node.error("Error parsing json output : " + error.message);
                     node_status("error parsing json","red","dot",1500);
-                    node_status2("running","blue","ring",1500);
+                    if(node.transcribeWav){
+                        node_status2("running","blue","ring",2000);
+                    }
                     return;
                 }
                 
@@ -124,19 +110,55 @@
                     RED.util.setMessageProperty(msg, node.outputField, node.outputValue, true);
                 } catch(err) {
                     node.error("Error setting value in msg." + node.outputField + " : " + err.message);
-                    node_status("error","red","dot",1500);
+                    if(node.transcribeWav){
+                        node_status2("running","blue","ring",2000);
+                    }
                     return;
                 }
             
                 node.send(msg);
                 node_status("success","green","dot",1500);
-                node_status2("running","blue","ring",1500);
+                if(node.transcribeWav){
+                    node_status2("running","blue","ring",2000);
+                }
                 return;
             });
             return;
             
         }
         
+        function saveBufferWrite(msg){
+            node_status("processing...","blue","dot",15000);
+            let randomN = Math.floor(Math.random() * Math.floor(1000));
+            node.filePath = "/dev/shm/stt" + randomN + ".wav";
+            node.warn("saving to: " + node.filePath);
+            try {
+                fs.writeFileSync(node.filePath,node.inputMsg);
+            }
+            catch (error){
+                node.error("error saving to /dev/shm/" + err.message);
+                node_status("couldn't save buffer","red","dot",1500);
+                if(node.transcribeWav){
+                    node_status2("running","blue","ring",2000);
+                }
+                return;
+            }
+            node.processingNow = true;
+            node.filePath += "\n";
+            try {
+                node.transcribeWav.stdin.write(node.filePath);
+            }
+            catch (error){
+                node.error("couldn't write to stdin: " + error);
+                node_status("error","red","dot",1500);
+                node.processingNow = false;
+                if(node.transcribeWav){
+                    node_status2("running","blue","ring",2000);
+                }
+            }   
+            return;
+        }
+         
         function writeStdin(msg){
             
             node_status("processing...","blue","dot",15000);
@@ -149,14 +171,18 @@
                 catch(err) {
                     node.error("Error getting file path from msg." + node.inputField + " : " + err.message);
                     node_status("couldn't get file path from msg","red","dot",1500);
-                    node_status2("running","blue","ring",1500);
+                    if(node.transcribeWav){
+                        node_status2("running","blue","ring",2000);
+                    }
                     return;
                 }
                 
                 if (!node.filePath || node.filePath === "" || typeof node.filePath !== 'string') {
                     node.error("The msg." + node.inputField + " should contain a file path");
                     node_status("file path format is not valid","red","dot",1500);
-                    node_status2("running","blue","ring",1500);
+                    if(node.transcribeWav){
+                        node_status2("running","blue","ring",2000);
+                    }
                     return;
                 }
             }
@@ -167,13 +193,25 @@
             if (!fs.existsSync(node.filePath)){
                 node.error("The file path does not exist");
                 node_status("file path does not exist","red","dot",1500);
-                node_status2("running","blue","ring",1500);
+                if(node.transcribeWav){
+                    node_status2("running","blue","ring",2000);
+                }
                 return;
             }
             
             node.processingNow = true;
             node.filePath += "\n";
-            node.transcribeWav.stdin.write(node.filePath);
+            try {
+                node.transcribeWav.stdin.write(node.filePath);
+            }
+            catch (error){
+                node.error("couldn't write to stdin: " + error);
+                node_status("error","red","dot",1500);
+                node.processingNow = false;
+                if(node.transcribeWav){
+                    node_status2("running","blue","ring",2000);
+                }
+            }
             return;
             
         }
@@ -228,7 +266,6 @@
                     if(node.transcribeWav){
                         node.warn("stopping");
                         node.transcribeWav.kill();
-                        delete node.transcribeWav;
                     } else {
                         node.warn("not running, nothing to stop");
                     }
@@ -238,9 +275,18 @@
             
                     if(node.processingNow == true) {
                         let warnmsg = "Ignoring input message because the previous message is not processed yet";
-                    node.warn(warnmsg);
+                        node.warn(warnmsg);
                     } else if(!node.transcribeWav){
-                        node.warn("not started so not processing");
+                        node.warn("not started, starting now!");
+                        spawnTranscribe(node.msgObj);
+                        setTimeout(()=>{
+                            if(typeof node.inputMsg == "string"){
+                                writeStdin(node.msgObj);
+                            } else if(Buffer.isBuffer(node.inputMsg)){
+                                saveBufferWrite(node.msgObj);
+                            }
+                            return;
+                        }, 1000);
                     } else {
                         if(typeof node.inputMsg == "string"){
                             writeStdin(node.msgObj);
