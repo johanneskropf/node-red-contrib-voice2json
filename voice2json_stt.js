@@ -82,7 +82,6 @@
             
             node.transcribeWav.on('close', function (code,signal) {
                 node.processingNow = false;
-                node.transcribeWav.stdin.end();
                 delete node.transcribeWav;
                 node.warn("stopped");
                 node_status2("stopped","grey","ring",1600);
