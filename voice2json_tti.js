@@ -15,16 +15,22 @@
  **/
  module.exports = function(RED) {
     var settings = RED.settings;
-    const { exec } = require("child_process");
+    const { spawn } = require("child_process");
     const fs = require("fs");
     
     function Voice2JsonTextToIntentNode(config) {
         RED.nodes.createNode(this, config);
         this.inputField  = config.inputField;
         this.outputField = config.outputField;
-        this.profilePath = ""; //todo add check for length at execution
-        this.validPath = false;
+        this.profilePath = "";
+        this.inpuText = "";
+        this.inputMsg = null;
         this.statusTimer = false;
+        this.statusTimer2 = false;
+        this.processingNow = false;
+        this.autoStart = config.autoStart;
+        this.msgObj = {};
+        this.fileId = "";
         var node = this;
      
         function node_status(text,color,shape,time){
@@ -38,98 +44,206 @@
                 node.statusTimer = false;
             },time);
         }
-
-        // Retrieve the config node
-        node.voice2JsonConfig = RED.nodes.getNode(config.voice2JsonConfig);
         
-        if (node.voice2JsonConfig) {
-            // Use the profile path which has been specified in the config node
-            node.profilePath = node.voice2JsonConfig.profilePath;
-            //check path
-            if (fs.existsSync(node.profilePath)){
-                node.validPath = true;
+        function node_status2(text,color,shape,time){
+            if(node.statusTimer2 !== false){
+                clearTimeout(node.statusTimer2);
+                node.statusTimer2 = false;
             }
+            node.statusTimer2 = setTimeout(() => {
+                node.status({fill:color,shape:shape,text:text});
+                node.statusTimer2 = false;
+            },time);
         }
-
-        node.on("input", function(msg) {
-            let textToAnalyze = {
-                text:""
-            };
-            
-            if(node.childProcess) {
-                let warnmsg = "Ignoring input message because the previous message is not processed yet";
-                console.log(warnmsg);
-                node.warn(warnmsg);
-                return;
-            }
-            
-            if(!node.validPath){
-                node.error("Profile path doesn't exist. Please check the profile path");
-                node_status("profile path error","red","dot",1500);
-                return;
-            }
-            
-            try {
-                // Get the (spoken) text to analyze from the specified message field
-                textToAnalyze.text = RED.util.getMessageProperty(msg, node.inputField);
+        
+        function spawnRecognize(msg){
+            try{
+                node.recognizeIntent = spawn("voice2json",["--profile",node.profilePath,"recognize-intent","--text-input"]);
             } 
-            catch(err) {
-                node.error("Error getting text to analyze from msg." + node.inputField + " : " + err.message);
-                node_status("error getting text from msg","red","dot",1500);
+            catch (error) {
+                node_status2("error starting","red","ring",1);
+                node.error(error);
                 return;
             }
             
-            if (!textToAnalyze.text || textToAnalyze.text === "" || typeof textToAnalyze.text !== 'string') {
-                node.error("The msg." + node.inputField + " should contain a string with text to analyze");
-                node_status("error: msg did not contain valid text","red","dot",1500);
+            node_status2("running","blue","ring",1);
+            
+            node.recognizeIntent.stderr.on('data', (data)=>{
+                node.error("stderr: " + data.toString());
+                node_status("error","red","dot",1500);
+                if(node.recognizeIntent){
+                    node_status2("running","blue","ring",1600);
+                }
                 return;
-            }
-                
-            // Convert the text to a JSON string for voice2json
-            textToAnalyze = "'" + JSON.stringify(textToAnalyze) + "'";
+            });
             
-            node_status("processing...","blue","dot",15000);
+            node.recognizeIntent.on('close', function (code,signal) {
+                node.processingNow = false;
+                node.recognizeIntent.stdin.end();
+                delete node.recognizeIntent;
+                node.warn("stopped");
+                node_status2("stopped","grey","ring",1600);
+                return;
+            });
             
-            const voice2json = "voice2json --profile " + node.profilePath + " recognize-intent " + textToAnalyze;
+            node.recognizeIntent.stdout.on('data', (data)=>{
             
-            node.childProcess = exec(voice2json, (error, stdout, stderr) => {
-                let outputValue;
-                
-                delete node.childProcess;
-                
-                if (error) {
-                    node.error(error.message);
-                    node_status("error","red","dot",1500);
-                    return;
-                }
-                if (stderr) {
-                    node.error(stderr);
-                    node_status("stderr:error","red","dot",1500);
-                    return;
-                }
+                node.processingNow = false;
+                node.intent = data.toString();
                 
                 try {
-                    outputValue = JSON.parse(stdout);
+                    node.outputValue = JSON.parse(node.intent);
                 }
                 catch(error) {
                     node.error("Error parsing json output : " + error.message);
                     node_status("error parsing json","red","dot",1500);
+                    if(node.recognizeIntent){
+                        node_status2("running","blue","ring",1600);
+                    }
                     return;
                 }
                 
                 try {
                     // Set the converted value in the specified message field (of the original input message)
-                    RED.util.setMessageProperty(msg, node.outputField, outputValue, true);
+                    RED.util.setMessageProperty(msg, node.outputField, node.outputValue, true);
                 } catch(err) {
                     node.error("Error setting value in msg." + node.outputField + " : " + err.message);
                     node_status("error","red","dot",1500);
+                    if(node.recognizeIntent){
+                        node_status2("running","blue","ring",1600);
+                    }
                     return;
                 }
             
                 node.send(msg);
                 node_status("success","green","dot",1500);
+                if(node.recognizeIntent){
+                    node_status2("running","blue","ring",1600);
+                }
                 return;
             });
+            return;
+            
+        }
+        
+        function writeStdin(msg){
+            
+            node_status("processing...","blue","dot",15000);
+           
+            try {
+                // Get the text to analyze from input
+                node.inputText = RED.util.getMessageProperty(msg, node.inputField);
+            } 
+            catch(err) {
+                node.error("Error getting text from msg." + node.inputField + " : " + err.message);
+                node_status("couldn't text from msg","red","dot",1500);
+                if(node.recognizeIntent){
+                    node_status2("running","blue","ring",1600);
+                }
+                return;
+            }
+                
+            if (!node.inputText || node.inputText === "" || typeof node.inputText !== 'string') {
+                node.error("The msg." + node.inputField + " should contain a text to do intent recognition on");
+                node_status("input text format is not valid","red","dot",1500);
+                if(node.recognizeIntent){
+                    node_status2("running","blue","ring",1600);
+                }
+                return;
+            }
+
+            node.processingNow = true;
+            node.inputText += "\n";
+            try {
+                node.recognizeIntent.stdin.write(node.inputText);
+            }
+            catch (error){
+                node.error("couldn't write to stdin: " + error);
+                node_status("error","red","dot",1500);
+                node.processingNow = false;
+                if(node.recognizeIntent){
+                    node_status2("running","blue","ring",1600);
+                }
+            }
+            return;
+            
+        }
+
+        // Retrieve the config node
+        node.voice2JsonConfig = RED.nodes.getNode(config.voice2JsonConfig);
+        node_status2("not started","grey","ring",1);
+        
+        if (node.voice2JsonConfig) {
+            // Use the profile path which has been specified in the config node
+            node.profilePath = node.voice2JsonConfig.profilePath;
+            //check path
+            if (!fs.existsSync(node.profilePath)){
+                node.error("Profile path doesn't exist. Please check the profile path");
+                node_status("profile path error","red","dot",1500);
+                return;
+            }
+        }
+        
+        if(node.autoStart){
+            node.warn("starting");
+            setTimeout(()=>{
+                spawnRecognize(node.msgObj);
+                return;
+            }, 1500);
+        }
+
+        node.on("input", function(msg) {
+            
+            node.inputMsg = RED.util.getMessageProperty(msg, node.inputField);
+            node.msgObj = msg;
+            switch (node.inputMsg){
+            
+                case "start":
+ 
+                    if(node.recognizeIntent){
+                        node.warn("restarting");
+                        node.recognizeIntent.kill();
+                        delete node.recognizeIntent;
+                        setTimeout(()=>{
+                            spawnRecognize(node.msgObj);
+                            return;
+                        }, 1500);
+                    } else {
+                        node.warn("starting");
+                        spawnRecognize(node.msgObj);
+                    }
+                    return;
+                    
+                case "stop":
+                
+                    if(node.recognizeIntent){
+                        node.warn("stopping");
+                        node.recognizeIntent.kill();
+                        delete node.recognizeIntent;
+                    } else {
+                        node.warn("not running, nothing to stop");
+                    }
+                    return;
+                    
+                default:
+            
+                    if(node.processingNow == true) {
+                        let warnmsg = "Ignoring input message because the previous message is not processed yet";
+                        node.warn(warnmsg);
+                    } else if(!node.recognizeIntent){
+                        node.warn("not started, starting now!");
+                        spawnRecognize(node.msgObj);
+                        setTimeout(()=>{
+                            writeStdin(node.msgObj);
+                            return;
+                        }, 1000);
+                    } else {
+                        writeStdin(node.msgObj);
+                    }
+                    return;
+                    
+            }  
+            
         });
         
         node.on("close",function() {
@@ -138,9 +252,16 @@
                node.statusTimer = false;
                node.status({});
             }
-            if(node.childProcess) {
-                node.childProcess.kill();
-                delete node.childProcess;
+            
+            if(node.statusTimer2 !== false){
+               clearTimeout(node.statusTimer2);
+               node.statusTimer2 = false;
+               node.status({});
+            }
+            
+            if(node.recognizeIntent) {
+                node.recognizeIntent.kill();
+                delete node.recognizeIntent;
             }
         });
     }
