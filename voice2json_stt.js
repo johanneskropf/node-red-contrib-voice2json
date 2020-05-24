@@ -75,7 +75,7 @@
                 node.error("stderr: " + data.toString());
                 node_status("error","red","dot",1500);
                 if(node.transcribeWav){
-                    node_status2("running","blue","ring",2000);
+                    node_status2("running","blue","ring",1600);
                 }
                 return;
             });
@@ -85,7 +85,7 @@
                 node.transcribeWav.stdin.end();
                 delete node.transcribeWav;
                 node.warn("stopped");
-                node_status2("stopped","grey","ring",2000);
+                node_status2("stopped","grey","ring",1600);
                 return;
             });
             
@@ -101,7 +101,7 @@
                     node.error("Error parsing json output : " + error.message);
                     node_status("error parsing json","red","dot",1500);
                     if(node.transcribeWav){
-                        node_status2("running","blue","ring",2000);
+                        node_status2("running","blue","ring",1600);
                     }
                     return;
                 }
@@ -111,8 +111,9 @@
                     RED.util.setMessageProperty(msg, node.outputField, node.outputValue, true);
                 } catch(err) {
                     node.error("Error setting value in msg." + node.outputField + " : " + err.message);
+                    node_status("error","red","dot",1500);
                     if(node.transcribeWav){
-                        node_status2("running","blue","ring",2000);
+                        node_status2("running","blue","ring",1600);
                     }
                     return;
                 }
@@ -120,7 +121,7 @@
                 node.send(msg);
                 node_status("success","green","dot",1500);
                 if(node.transcribeWav){
-                    node_status2("running","blue","ring",2000);
+                    node_status2("running","blue","ring",1600);
                 }
                 return;
             });
@@ -138,7 +139,7 @@
                 node.error("error saving to /dev/shm/" + err.message);
                 node_status("couldn't save buffer","red","dot",1500);
                 if(node.transcribeWav){
-                    node_status2("running","blue","ring",2000);
+                    node_status2("running","blue","ring",1600);
                 }
                 return;
             }
@@ -152,7 +153,7 @@
                 node_status("error","red","dot",1500);
                 node.processingNow = false;
                 if(node.transcribeWav){
-                    node_status2("running","blue","ring",2000);
+                    node_status2("running","blue","ring",1600);
                 }
             }   
             return;
@@ -171,7 +172,7 @@
                     node.error("Error getting file path from msg." + node.inputField + " : " + err.message);
                     node_status("couldn't get file path from msg","red","dot",1500);
                     if(node.transcribeWav){
-                        node_status2("running","blue","ring",2000);
+                        node_status2("running","blue","ring",1600);
                     }
                     return;
                 }
@@ -180,7 +181,7 @@
                     node.error("The msg." + node.inputField + " should contain a file path");
                     node_status("file path format is not valid","red","dot",1500);
                     if(node.transcribeWav){
-                        node_status2("running","blue","ring",2000);
+                        node_status2("running","blue","ring",1600);
                     }
                     return;
                 }
@@ -193,7 +194,7 @@
                 node.error("The file path does not exist");
                 node_status("file path does not exist","red","dot",1500);
                 if(node.transcribeWav){
-                    node_status2("running","blue","ring",2000);
+                    node_status2("running","blue","ring",1600);
                 }
                 return;
             }
@@ -208,7 +209,7 @@
                 node_status("error","red","dot",1500);
                 node.processingNow = false;
                 if(node.transcribeWav){
-                    node_status2("running","blue","ring",2000);
+                    node_status2("running","blue","ring",1600);
                 }
             }
             return;
@@ -267,6 +268,7 @@
                     if(node.transcribeWav){
                         node.warn("stopping");
                         node.transcribeWav.kill();
+                        delete node.transcribeWav;
                     } else {
                         node.warn("not running, nothing to stop");
                     }
