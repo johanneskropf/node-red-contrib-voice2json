@@ -78,7 +78,6 @@
             
             node.recognizeIntent.on('close', function (code,signal) {
                 node.processingNow = false;
-                node.recognizeIntent.stdin.end();
                 delete node.recognizeIntent;
                 node.warn("stopped");
                 node_status2("stopped","grey","ring",1600);
