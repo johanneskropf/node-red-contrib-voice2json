@@ -23,14 +23,13 @@
         this.inputField  = config.inputField;
         this.outputField = config.outputField;
         this.profilePath = "";
-        this.inpuText = "";
+        this.inputText = "";
         this.inputMsg = null;
         this.statusTimer = false;
         this.statusTimer2 = false;
         this.processingNow = false;
         this.autoStart = config.autoStart;
         this.msgObj = {};
-        this.fileId = "";
         var node = this;
      
         function node_status(text,color,shape,time){
