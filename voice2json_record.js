@@ -15,17 +15,23 @@
  **/
  module.exports = function(RED) {
     var settings = RED.settings;
-    const { exec } = require("child_process");
+    const { spawn } = require("child_process");
     const fs = require("fs");
     
-    function Voice2JsonRecordNode(config) {
+    function Voice2JsonRecordCommandNode(config) {
         RED.nodes.createNode(this, config);
+        this.inputField  = config.inputField;
         this.outputField = config.outputField;
-        this.filePath = config.filePath;
-        this.validPath = false;
+        this.profilePath = "";
         this.statusTimer = false;
+        this.statusTimer2 = false;
+        this.processingNow = false;
+        this.msgObj = {};
+        this.outputBufferArr = [];
+        this.outputBuffer = false;
+        this.notNow = false;
         var node = this;
-     
+        
         function node_status(text,color,shape,time){
             node.status({fill:color,shape:shape,text:text});
             if(node.statusTimer !== false){
@@ -37,76 +43,52 @@
                 node.statusTimer = false;
             },time);
         }
-
-        // Retrieve the config node
-        node.voice2JsonConfig = RED.nodes.getNode(config.voice2JsonConfig);
         
-        if (node.voice2JsonConfig) {
-            // Use the profile path which has been specified in the config node
-            node.profilePath = node.voice2JsonConfig.profilePath;
-            //check path
-            if (fs.existsSync(node.profilePath)){
-                node.validPath = true;
+        function node_status2(text,color,shape,time){
+            if(node.statusTimer2 !== false){
+                clearTimeout(node.statusTimer2);
+                node.statusTimer2 = false;
             }
+            node.statusTimer2 = setTimeout(() => {
+                node.status({fill:color,shape:shape,text:text});
+                node.statusTimer2 = false;
+            },time);
         }
-
-        node.on("input", function(msg) {
-            
-            if(node.childProcess) {
-                let warnmsg = "Ignoring input message because the previous message is not processed yet";
-                console.log(warnmsg);
-                node.warn(warnmsg);
+        
+        function notNowWait(){
+            node.notNow = true;
+            node.warn("timeout started");
+            setTimeout(() => {
+                node.notNow = false;
+                node.warn("timeout finished");
+            }, 3000);
+        }
+        
+        function spawnRecord(){
+            let msg = {};
+            try{
+                node.recordCommand = spawn("voice2json",["--profile",node.profilePath,"record-command","--audio-source","-","--wav-sink","-"]);
+            } 
+            catch (error) {
+                node_status2("error starting","red","ring",1);
+                node.error(error);
                 return;
             }
             
-            if(!node.validPath){
-                node.error("Profile path doesn't exist. Please check the profile path");
-                node_status("profile path error","red","dot",1500);
+            node_status2("recording from stream","blue","dot",1);
+            
+            node.recordCommand.stderr.on('data', (data)=>{
+                node.error("stderr: " + data.toString());
+                node_status("error","red","dot",1500);
                 return;
-            }
+            });
             
-            if(!node.filePath.match(/\.wav$/g)){
-                node.error("the specified file: " + node.filePath + " has to be a .wav file");
-                node_status("not a .wav","red","dot",1500);
-                return;
-            }
-            
-            if(node.filePath.match(/\//g)){
-	            let purePath = node.filePath.replace(/\/[^\/]*$/g,"");
-	            if (!fs.existsSync(purePath)){
-	                node.error("the specified path: " + purePath + " doesn't exist");
-	                node_status("non existent path","red","dot",1500);
-	                return;
-	            }
-	        }
-            
-            node_status("recording...","blue","dot",30000);
-            
-            //const voice2json = "voice2json --profile " + node.profilePath + " record-command > " + node.filePath;
-            const voice2json = "sox -t alsa default -r 16000 -c 1 -b 16 " + node.filePath + " silence -l 0 1 2.0 2.0% trim 0 6 vad -p 0.2 reverse vad -p 0.5 reverse";
-            
-            node.childProcess = exec(voice2json, (error, stdout, stderr) => {
-                let outputValue;
+            node.recordCommand.on('close', function (code,signal) {
                 
-                delete node.childProcess;
-                
-                if (error) {
-                    node.error(error.message);
-                    node_status("error","red","dot",1500);
-                    return;
-                }
-                /*if (stderr) {
-                    node.error(stderr);
-                    node_status("stderr:error","red","dot",1500);
-                    return;
-                }*/
-                
-                outputValue = stdout;
-                if(stderr) outputValue += stderr;
-                
+                node.outputBuffer = Buffer.concat(node.outputBufferArr);
                 try {
                     // Set the converted value in the specified message field (of the original input message)
-                    RED.util.setMessageProperty(msg, node.outputField, outputValue, true);
+                    RED.util.setMessageProperty(msg, node.outputField, node.outputBuffer, true);
                 } catch(err) {
                     node.error("Error setting value in msg." + node.outputField + " : " + err.message);
                     node_status("error","red","dot",1500);
@@ -114,9 +96,68 @@
                 }
             
                 node.send(msg);
+                node.outputBufferArr = [];
                 node_status("finished","green","dot",1500);
+                node.warn("done");
+                delete node.recordCommand;
                 return;
+                
             });
+            
+            node.recordCommand.stdout.on('data', (data)=>{
+                
+                if(!node.notNow) { notNowWait(); }
+                node.outputBufferArr.push(data);
+                
+            });
+            return;
+            
+        }
+         
+        function writeStdin(chunk){
+            
+            try {
+                node.recordCommand.stdin.write(chunk);
+            }
+            catch (error){
+                node.error("couldn't write to stdin: " + error);
+                node_status("error","red","dot",1500);
+            }
+            return;
+            
+        }
+        
+        // Retrieve the config node
+        node.voice2JsonConfig = RED.nodes.getNode(config.voice2JsonConfig);
+        
+        if (node.voice2JsonConfig) {
+            // Use the profile path which has been specified in the config node
+            node.profilePath = node.voice2JsonConfig.profilePath;
+            //check path
+            if (!fs.existsSync(node.profilePath)){
+                node.error("Profile path doesn't exist. Please check the profile path");
+                node_status("profile path error","red","dot",1500);
+                return;
+            }
+        }
+
+        node.on("input", function(msg) {
+            
+            node.inputMsg = RED.util.getMessageProperty(msg, node.inputField);
+            
+            if(!node.notNow){
+	            if(!node.recordCommand){
+	                node.warn("starting")
+	                if(Buffer.isBuffer(node.inputMsg)){
+	                    spawnRecord();
+	                }
+	            } else {
+	                if(Buffer.isBuffer(node.inputMsg)){
+	                    writeStdin(node.inputMsg);
+	                }
+	            }
+	        }
+            
         });
         
         node.on("close",function() {
@@ -125,11 +166,18 @@
                node.statusTimer = false;
                node.status({});
             }
-            if(node.childProcess) {
-                node.childProcess.kill();
-                delete node.childProcess;
+            
+            if(node.statusTimer2 !== false){
+               clearTimeout(node.statusTimer2);
+               node.statusTimer2 = false;
+               node.status({});
+            }
+            
+            if(node.recordCommand) {
+                node.recordCommand.kill();
+                delete node.recordCommand;
             }
         });
     }
-    RED.nodes.registerType("voice2json-record", Voice2JsonRecordNode);
+    RED.nodes.registerType("voice2json-record-command", Voice2JsonRecordCommandNode);
 }
