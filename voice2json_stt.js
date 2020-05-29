@@ -61,7 +61,7 @@
         
         function spawnTranscribe(msg){
             try{
-                node.transcribeWav = spawn("voice2json",["--profile",node.profilePath,"transcribe-wav","--stdin-file"]);
+                node.transcribeWav = spawn("voice2json",["--profile",node.profilePath,"transcribe-wav","--stdin-file"],{detached:true});
             } 
             catch (error) {
                 node_status2("error strating","red","ring",1);
@@ -265,9 +265,10 @@
                 case "stop":
                 
                     if(node.transcribeWav){
+                    
                         node.warn("stopping");
-                        node.transcribeWav.kill();
-                        delete node.transcribeWav;
+                        process.kill(-node.transcribeWav.pid);
+                        
                     } else {
                         node.warn("not running, nothing to stop");
                     }
@@ -316,8 +317,7 @@
             }
             
             if(node.transcribeWav) {
-                node.transcribeWav.kill();
-                delete node.transcribeWav;
+                process.kill(-node.transcribeWav.pid);
             }
         });
     }

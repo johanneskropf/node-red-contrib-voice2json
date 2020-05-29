@@ -57,7 +57,7 @@
         
         function spawnRecognize(msg){
             try{
-                node.recognizeIntent = spawn("voice2json",["--profile",node.profilePath,"recognize-intent","--text-input"]);
+                node.recognizeIntent = spawn("voice2json",["--profile",node.profilePath,"recognize-intent","--text-input"],{detached:true});
             } 
             catch (error) {
                 node_status2("error starting","red","ring",1);
@@ -80,7 +80,7 @@
                 node.processingNow = false;
                 delete node.recognizeIntent;
                 node.warn("stopped");
-                node_status2("stopped","grey","ring",1600);
+                node_status2("stopped","grey","ring",1);
                 return;
             });
             
@@ -216,8 +216,7 @@
                 
                     if(node.recognizeIntent){
                         node.warn("stopping");
-                        node.recognizeIntent.kill();
-                        delete node.recognizeIntent;
+                        process.kill(-node.recognizeIntent.pid);
                     } else {
                         node.warn("not running, nothing to stop");
                     }
@@ -258,8 +257,7 @@
             }
             
             if(node.recognizeIntent) {
-                node.recognizeIntent.kill();
-                delete node.recognizeIntent;
+                process.kill(-node.recognizeIntent.pid);
             }
         });
     }
