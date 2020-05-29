@@ -10,6 +10,19 @@ npm install bartbutenaers/node-red-contrib-voice2json
 ```
 Install voice2json on the same machine as nodered. Detailed instructions can be found in the [voice2json documentation](http://voice2json.org/install.html).
 
+If you want to use node-red-contrib-voice2json with a docker install you have to adapt the supplied bash script to include the line `-v “/dev/shm/:/dev/shm/“ \`.
+So it will be:
+```
+#!/usr/bin/env bash
+docker run -i \
+       -v "${HOME}:${HOME}" \
+       -v “/dev/shm/:/dev/shm/“ \
+       -w "$(pwd)" \
+       -e "HOME=${HOME}" \
+       --user "$(id -u):$(id -g)" \
+       synesthesiam/voice2json:2.0.0 "$@"
+```
+
 ## Voice2json introduction
 
 The [voice2json](http://voice2json.org/) project offers a collection of command line speech and intent recognition tools on Linux or in a Docker container.
