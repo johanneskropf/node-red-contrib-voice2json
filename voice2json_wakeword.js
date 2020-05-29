@@ -16,7 +16,6 @@
  module.exports = function(RED) {
     var settings = RED.settings;
     const { spawn } = require("child_process");
-    const { exec } = require("child_process");
     const fs = require("fs");
     
     function Voice2JsonWakewordNode(config) {
@@ -26,9 +25,7 @@
         this.profilePath = "";
         this.statusTimer = false;
         this.statusTimer2 = false;
-        //this.autoStart = config.autoStart;
         this.pauseListen = false;
-        this.killCommand = "pkill -INT -f wait-wake";
         var node = this;
         
         function node_status(text,color,shape,time){
