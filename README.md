@@ -1,4 +1,7 @@
 # node-red-contrib-voice2json
+
+!!!This is very much wip, so please use carefully. The nodes will only work the latest version of voice2json and are not backwards compatible with voice2json 1.0.0!!!
+
 Node-RED nodes that provide a simple wrapper for local speech and intent recognition on linux via [voice2json](http://voice2json.org/).
 
 Thanks to [Johannes Kropf](https://github.com/johanneskropf), my partner in crime for this node!  He has provided the idea of integrating Voice2Json in Node-RED.
