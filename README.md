@@ -40,6 +40,8 @@ The config node which can be used to store a path to a local voice2json [languag
 
 ![voice2json_config](https://user-images.githubusercontent.com/14224149/80300328-f1861b80-879b-11ea-9fee-0e2c3476527d.gif)
 
+When using the nodes with the docker container installation you have to download any profile you want to use to a path somewhere in your home directory as otherwise the container will not be able to access it. Another option would be to include the path to your container as an additional `-v` argument in the voice2json docker run bash script.
+
 ## Notes on minimizing SD card wear in voice2jsons file based workflow
 
 The voice2json workflow is based on a few differnt concepts. One of them is that all handling of audio data is file based. In the [voice2json](http://voice2json.org/) documentation it describes it as follows:
