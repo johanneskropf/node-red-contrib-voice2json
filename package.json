@@ -36,7 +36,7 @@
             "voice2json-training": "voice2json_training.js",
             "voice2json-tti": "voice2json_tti.js",
             "voice2json-record-command": "voice2json_record.js",
-            "voice2json-transcribe-stream": "voice2json_transcribestream.js"
+            "voice2json-wait-wake": "voice2json_wakeword.js"
         }
     }
 }
