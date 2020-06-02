@@ -27,16 +27,33 @@
         this.statusTimer = false;
         var node = this;
       
-        function node_status(text,color,shape,time){
-            node.status({fill:color,shape:shape,text:text});
-            if(node.statusTimer !== false){
+        function node_status(state1 = [], timeout = 0, state2 = []){
+            
+            if (state1.length !== 0) {
+                node.status({fill:state1[1],shape:state1[2],text:state1[0]});
+            } else {
+                node.status({});
+            }
+            
+            if (node.statusTimer !== false) {
                 clearTimeout(node.statusTimer);
                 node.statusTimer = false;
             }
-            node.statusTimer = setTimeout(() => {
-                node.status({});
-                node.statusTimer = false;
-            },time);
+            
+            if (timeout !== 0) {
+                node.statusTimer = setTimeout(() => {
+                
+                    if (state2.length !== 0) {
+                        node.status({fill:state2[1],shape:state2[2],text:state2[0]});
+                    } else {
+                        node.status({});
+                    }
+                    
+                    node.statusTimer = false;
+                    
+                },timeout);
+            }
+            
         }
 
         // Retrieve the config node
@@ -50,13 +67,19 @@
                 node.validPath = true;
             }
         }
+        
+        if(!node.validPath){
+            node.error("Profile path doesn't exist. Please check the profile path");
+            node_status(["profile path error","red","dot"]);
+            return;
+        }
 
         node.on("input", function(msg) {
             let inputMsg = RED.util.getMessageProperty(msg, node.inputField);
             
             if(inputMsg !== "train"){
                 node.warn('send a msg with a string of "train" as the the configured input msg property to train the selected profile');
-                node_status("not a train payload, doing nothing","yellow","dot",1500);
+                node_status(["not a train payload, doing nothing","yellow","dot"],1500);
                 return;
             }
             
@@ -67,13 +90,7 @@
                 return;
             }
             
-            if(!node.validPath){
-                node.error("Profile path doesn't exist. Please check the profile path");
-                node_status("profile path error","red","dot",1500);
-                return;
-            }
-            
-            node_status("training...","blue","dot",60000);
+            node_status(["training...","blue","dot"]);
             
             const voice2json = "voice2json --profile " + node.profilePath + " train-profile";
             
@@ -84,39 +101,30 @@
                 
                 if (error) {
                     node.error(error.message);
-                    node_status("error","red","dot",1500);
+                    node_status(["error","red","dot"],1500);
                     return;
                 }
-                /*if (stderr) {
-                    node.error(stderr);
-                    node_status("stderr:error","red","dot",1500);
-                    return;
-                }*/
                 
                 outputValue = "result:\n" + stdout;
-                if(stderr) outputValue += stderr; //voice2json sends ngram and kalditraining results to stderr even if successful
+                if (stderr) { outputValue += stderr; }//voice2json sends ngram and kalditraining results to stderr
                 
                 try {
                     // Set the converted value in the specified message field (of the original input message)
                     RED.util.setMessageProperty(msg, node.outputField, outputValue, true);
                 } catch(err) {
                     node.error("Error setting value in msg.payload: " + err.message);
-                    node_status("error","red","dot",1500);
+                    node_status(["error","red","dot"],1500);
                     return;
                 }
             
                 node.send(msg);
-                node_status("success","green","dot",1500);
+                node_status(["success","green","dot"],1500);
                 return;
             });
         });
         
         node.on("close",function() {
-            if(node.statusTimer !== false){
-               clearTimeout(node.statusTimer);
-               node.statusTimer = false;
-               node.status({});
-            }
+            node_status();
             if(node.childProcess) {
                 node.childProcess.kill();
                 delete node.childProcess;

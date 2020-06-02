@@ -28,27 +28,33 @@
         this.pauseListen = false;
         var node = this;
         
-        function node_status(text,color,shape,time){
-            node.status({fill:color,shape:shape,text:text});
-            if(node.statusTimer !== false){
+        function node_status(state1 = [], timeout = 0, state2 = []){
+            
+            if (state1.length !== 0) {
+                node.status({fill:state1[1],shape:state1[2],text:state1[0]});
+            } else {
+                node.status({});
+            }
+            
+            if (node.statusTimer !== false) {
                 clearTimeout(node.statusTimer);
                 node.statusTimer = false;
             }
-            node.statusTimer = setTimeout(() => {
-                node.status({});
-                node.statusTimer = false;
-            },time);
-        }
-        
-        function node_status2(text,color,shape,time){
-            if(node.statusTimer2 !== false){
-                clearTimeout(node.statusTimer2);
-                node.statusTimer2 = false;
+            
+            if (timeout !== 0) {
+                node.statusTimer = setTimeout(() => {
+                
+                    if (state2.length !== 0) {
+                        node.status({fill:state2[1],shape:state2[2],text:state2[0]});
+                    } else {
+                        node.status({});
+                    }
+                    
+                    node.statusTimer = false;
+                    
+                },timeout);
             }
-            node.statusTimer2 = setTimeout(() => {
-                node.status({fill:color,shape:shape,text:text});
-                node.statusTimer2 = false;
-            },time);
+            
         }
         
         function spawnWake(){
@@ -59,16 +65,16 @@
                 node.waitWake = spawn("voice2json",["--profile",node.profilePath,"wait-wake","--audio-source","-"],{detached:true});
             } 
             catch (error) {
-                node_status2("error starting","red","ring",1);
+                node_status(["error starting","red","ring"],1500);
                 node.error(error);
                 return;
             }
             
-            node_status2("listening to stream","blue","dot",1);
+            node_status(["listening to stream","blue","dot"]);
             
             node.waitWake.stderr.on('data', (data)=>{
                 node.error("stderr: " + data.toString());
-                node_status("error","red","dot",1500);
+                node_status(["error","red","dot"],1500);
                 return;
             });
             
@@ -76,8 +82,7 @@
                 
                 node.warn("stopped");
                 delete node.waitWake;
-                node_status("stopped","grey","ring",1500);
-                node_status2("waiting for audio","grey","ring",1600);
+                node_status(["stopped","grey","ring"],1500,["waiting for audio","grey","ring"]);
                 return;
                 
             });
@@ -95,9 +100,10 @@
                 }
                 catch(error) {
                     node.error("Error parsing json output : " + error.message);
-                    node_status("error parsing json","red","dot",1500);
                     if(node.waitWake){
-                        node_status2("listening to stream","blue","ring",1600);
+                        node_status(["error parsing json","red","dot"],1500,["listening to stream","blue","ring"]);
+                    } else {
+                        node_status(["error parsing json","red","dot"],1500);
                     }
                     return;
                 }
@@ -107,16 +113,17 @@
                     RED.util.setMessageProperty(msg, node.outputField, node.outputValue, true);
                 } catch(err) {
                     node.error("Error setting value in msg." + node.outputField + " : " + err.message);
-                    node_status("error","red","dot",1500);
+                    if(node.waitWake){
+                        node_status(["error","red","dot"],1500,["listening to stream","blue","ring"]);
+                    } else {
+                        node_status(["error","red","dot"],1500);
+                    }
                     return;
                 }
             
                 node.send([msg,null]);
                 
-                node_status("wake word detetected","green","dot",1500);
-                if(node.waitWake){
-                    node_status2("forwarding audio","blue","ring",1600);
-                }
+                node_status(["wake word detetected","green","dot"],1500,["forwarding audio","blue","ring"]);
                 
             });
             return;
@@ -130,7 +137,11 @@
             }
             catch (error){
                 node.error("couldn't write to stdin: " + error);
-                node_status("error","red","dot",1500);
+                if(node.waitWake){
+                    node_status(["error writing chunk","red","dot"],1500,["listening to stream","blue","ring"]);
+                } else {
+                    node_status(["error writing chunk","red","dot"],1500);
+                }
             }
             return;
             
@@ -145,12 +156,12 @@
             //check path
             if (!fs.existsSync(node.profilePath)){
                 node.error("Profile path doesn't exist. Please check the profile path");
-                node_status("profile path error","red","dot",1500);
+                node_status(["profile path error","red","dot"]);
                 return;
             }
         }
         
-        node_status2("waiting for audio","grey","ring",1);
+        node_status(["waiting for audio","grey","ring"]);
 
         node.on("input", function(msg) {
             
@@ -173,7 +184,7 @@
                 
                     if(node.pauseListening === true){
                         node.pauseListening = false;
-                        node_status2("listening to stream","blue","dot",1);
+                        node_status(["listening to stream","blue","dot"]);
                     } else {
                         node.warn("already listening");
                     }
@@ -195,21 +206,13 @@
         });
         
         node.on("close",function() {
-            if(node.statusTimer !== false){
-               clearTimeout(node.statusTimer);
-               node.statusTimer = false;
-               node.status({});
-            }
             
-            if(node.statusTimer2 !== false){
-               clearTimeout(node.statusTimer2);
-               node.statusTimer2 = false;
-               node.status({});
-            }
+            node_status();
             
             if(node.waitWake) {
                 process.kill(-node.waitWake.pid);
             }
+            
         });
     }
     RED.nodes.registerType("voice2json-wait-wake", Voice2JsonWakewordNode);

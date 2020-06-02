@@ -32,36 +32,41 @@
         this.notNow = false;
         var node = this;
         
-        function node_status(text,color,shape,time){
-            node.status({fill:color,shape:shape,text:text});
-            if(node.statusTimer !== false){
+        function node_status(state1 = [], timeout = 0, state2 = []){
+            
+            if (state1.length !== 0) {
+                node.status({fill:state1[1],shape:state1[2],text:state1[0]});
+            } else {
+                node.status({});
+            }
+            
+            if (node.statusTimer !== false) {
                 clearTimeout(node.statusTimer);
                 node.statusTimer = false;
             }
-            node.statusTimer = setTimeout(() => {
-                node.status({});
-                node.statusTimer = false;
-            },time);
-        }
-        
-        function node_status2(text,color,shape,time){
-            if(node.statusTimer2 !== false){
-                clearTimeout(node.statusTimer2);
-                node.statusTimer2 = false;
+            
+            if (timeout !== 0) {
+                node.statusTimer = setTimeout(() => {
+                
+                    if (state2.length !== 0) {
+                        node.status({fill:state2[1],shape:state2[2],text:state2[0]});
+                    } else {
+                        node.status({});
+                    }
+                    
+                    node.statusTimer = false;
+                    
+                },timeout);
             }
-            node.statusTimer2 = setTimeout(() => {
-                node.status({fill:color,shape:shape,text:text});
-                node.statusTimer2 = false;
-            },time);
+            
         }
         
         function notNowWait(){
             node.notNow = true;
-            node.warn("timeout started");
+            
             setTimeout(() => {
                 node.notNow = false;
-                node.warn("timeout finished");
-            }, 3000);
+            }, 2000);
         }
         
         function spawnRecord(){
@@ -70,16 +75,16 @@
                 node.recordCommand = spawn("voice2json",["--profile",node.profilePath,"record-command","--audio-source","-","--wav-sink","-"]);
             } 
             catch (error) {
-                node_status2("error starting","red","ring",1);
+                node_status(["error starting","red","ring"]);
                 node.error(error);
                 return;
             }
             
-            node_status2("recording from stream","blue","dot",1);
+            node_status(["recording from stream","blue","dot"]);
             
             node.recordCommand.stderr.on('data', (data)=>{
                 node.error("stderr: " + data.toString());
-                node_status("error","red","dot",1500);
+                node_status(["error","red","dot"]);
                 return;
             });
             
@@ -91,14 +96,14 @@
                     RED.util.setMessageProperty(msg, node.outputField, node.outputBuffer, true);
                 } catch(err) {
                     node.error("Error setting value in msg." + node.outputField + " : " + err.message);
-                    node_status("error","red","dot",1500);
+                    node_status(["error","red","dot"]);
                     return;
                 }
             
                 node.send(msg);
                 node.outputBufferArr = [];
-                node_status("finished","green","dot",1500);
-                node.warn("done");
+                node_status(["finished","green","dot"],1500);
+                
                 delete node.recordCommand;
                 return;
                 
@@ -121,7 +126,11 @@
             }
             catch (error){
                 node.error("couldn't write to stdin: " + error);
-                node_status("error","red","dot",1500);
+                if (node.recordCommand) {
+                    node_status(["error writing chunk","red","dot"],1500,["recording from stream","blue","dot"]);
+                } else {
+                    node_status(["error writing chunk","red","dot"],1500);
+                }
             }
             return;
             
@@ -136,7 +145,7 @@
             //check path
             if (!fs.existsSync(node.profilePath)){
                 node.error("Profile path doesn't exist. Please check the profile path");
-                node_status("profile path error","red","dot",1500);
+                node_status(["profile path error","red","dot"]);
                 return;
             }
         }
@@ -147,7 +156,6 @@
             
             if(!node.notNow){
 	            if(!node.recordCommand){
-	                node.warn("starting")
 	                if(Buffer.isBuffer(node.inputMsg)){
 	                    spawnRecord();
 	                }
@@ -161,21 +169,10 @@
         });
         
         node.on("close",function() {
-            if(node.statusTimer !== false){
-               clearTimeout(node.statusTimer);
-               node.statusTimer = false;
-               node.status({});
-            }
-            
-            if(node.statusTimer2 !== false){
-               clearTimeout(node.statusTimer2);
-               node.statusTimer2 = false;
-               node.status({});
-            }
+            node_status();
             
             if(node.recordCommand) {
                 node.recordCommand.kill();
-                delete node.recordCommand;
             }
         });
     }
