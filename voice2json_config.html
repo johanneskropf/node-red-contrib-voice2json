@@ -156,11 +156,27 @@
                     
                     // Column 2 : Add an input field (type string) to the new row, that represents the file name
                     var fileNameField = $('<input/>',{class:"node-input-slot-fileName",type:"text",placeholder:"File name"}).css({"resize":"none","vertical-align":"top","width":"45%","margin-left":"5px","margin-right":"5px"}).appendTo(row);
+                    fileNameField.prop('required',true);
                     fileNameField.val(slot.fileName);
                     fileNameField.on("change keyup paste", function() {
                         // When the content of this slot is currently being visualized, then immediately update the name above the ace editor
                         if (selectedField.css('visibility') === 'visible') {
                             $("#node-selected-file-label").html('Content of slot file <i><b>"' + fileNameField.val() + '"</b></i>:' );
+                        }
+                        
+                        var fileName = this.value;
+                        
+                        // Find all fileName input fields with the same file name value
+                        var fileNameFields = slotsList.find(".node-input-slot-fileName").filter(function() {
+                            return this.value === fileName;
+                        })
+                        
+                        // Show a red border around the fileName field, when the same file name value is used in multiple input fields               
+                        if (fileNameFields.length > 1) {
+                            $(this).css('border', '1px solid rgb(214, 97, 95)');
+                        }
+                        else {
+                            $(this).css('border', '');
                         }
                     });
                     
