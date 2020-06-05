@@ -29,7 +29,6 @@
     }
     
     function setAceEditorReadOnly(aceEditor, readOnly) {
-    debugger;
         // See https://github.com/ajaxorg/ace/issues/266#issuecomment-16351550
         if (readOnly) {
             aceEditor.container.style.pointerEvents="none";
@@ -52,7 +51,23 @@
             profilePath: {value:"", required:true},
             name: {value:""},
             sentences: {value:null},
-            slots: {value:[]},
+            slots: {value:[], validate: function (v) {
+            debugger;
+                // Map the list of javascript objects to a file name array
+                var fileNameArray = v.map(function(item){ return item.fileName });
+                
+                if (fileNameArray.indexOf("") >= 0) {
+                    // Not valid if empty file names
+                    return false;
+                }
+                
+                var isDuplicate = fileNameArray.some(function(item, idx){ 
+                    return fileNameArray.indexOf(item) != idx 
+                });
+                
+                // Not valid if duplicate file names
+                return !isDuplicate;
+            }},
             removeSlots: {value:false}
         },
         inputs:1,
@@ -63,8 +78,6 @@
         },
         oneditprepare: function() {
             var node = this;
-            
-            debugger;
             
             if (!node.sentences) {
                 //initial text before file was loaded
@@ -246,8 +259,6 @@
                             	//get the content of sentences ini over http endpoint 1st draft
                                 let loadProfilePath = $("#node-config-input-profilePath").val();
                                 
-                                debugger;
-                                
                                 $.ajax({
                                     url: "voice2json-config/loadSlot",
                                     type: "GET",
@@ -271,7 +282,6 @@
                 },
                 removable: true,
                 removeItem: function(slot) {
-                    debugger;
                     // Make sure the removed slot file's content wasn't being displayed at the moment,
                     if (slot.selectedField.css('visibility') === 'visible') {
                         $("#node-selected-file-label").html('No slot selected' );
