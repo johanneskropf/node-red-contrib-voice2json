@@ -17,6 +17,7 @@
     var settings = RED.settings;
     const fs = require("fs");
     const path = require('path');
+    const chmod = require('chmod');
     
     function Voice2JsonConfigNode(config) {
         RED.nodes.createNode(this, config);
@@ -109,6 +110,14 @@
                     return; // Process next slot file
                 }
             }
+            
+            // The slot file can be executable or not.
+            // We only make it executable for the owner, not for the group or others.
+            chmod(slotFilePath, {
+                owner: {
+                    execute: slot.executable
+                }
+            });
         });
         
         node.on('close', function(){
