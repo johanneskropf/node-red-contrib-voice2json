@@ -142,8 +142,9 @@
             var slotsList = $("#node-input-slots-container").css('height','200px').css('min-height','200px').css('min-width','450px').editableList({
                 header: $("<div>").append($.parseHTML(
                    "<div style='width:5%; margin-left:5px; display: inline-grid'></div>" +
-                   "<div style='width:45%; margin-left:5px; display: inline-grid'><b>File name</b></div>" +
-                   "<div style='width:30%; margin-left:5px; display: inline-grid'><b>Managed by</b></div>" +
+                   "<div style='width:35%; margin-left:5px; display: inline-grid'><b>File name</b></div>" +
+                   "<div style='width:28%; margin-left:5px; display: inline-grid'><b>Managed by</b></div>" +
+                   "<div style='width:10%; margin-left:5px; display: inline-grid'><b>Exec</b></div>" +
                    "<div style='width:8%; margin-left:5px; display: inline-grid'></div>")),
                 addItem: function(container, i, slot) {
                     // When slot === {} then we have a new list item (i.e. user pressed the addItem button)
@@ -168,7 +169,7 @@
                     slot.selectedField = selectedField;
                     
                     // Column 2 : Add an input field (type string) to the new row, that represents the file name
-                    var fileNameField = $('<input/>',{class:"node-input-slot-fileName",type:"text",placeholder:"File name"}).css({"resize":"none","vertical-align":"top","width":"45%","margin-left":"5px","margin-right":"5px"}).appendTo(row);
+                    var fileNameField = $('<input/>',{class:"node-input-slot-fileName",type:"text",placeholder:"File name"}).css({"resize":"none","vertical-align":"top","width":"35%","margin-left":"5px","margin-right":"5px"}).appendTo(row);
                     fileNameField.prop('required',true);
                     fileNameField.val(slot.fileName);
                     fileNameField.on("change keyup paste", function() {
@@ -193,8 +194,8 @@
                         }
                     });
                     
-                    // Column 3 : Add a checkbox field (type string) to the new row, that represents how the file is managed (by Node-RED or not)
-                    var managedByField = $('<select/>', {class: "node-input-slot-managedBy", style: "width:30%; margin-right:10px;", type: "text"}).appendTo(row);
+                    // Column 3 : Add a dropdown field (type string) to the new row, that represents how the file is managed (by Node-RED or not)
+                    var managedByField = $('<select/>', {class: "node-input-slot-managedBy", style: "width:28%; margin-right:10px;", type: "text"}).appendTo(row);
                     managedByField.append($('<option>', {value: "nodered", text: 'Node-RED'}));
                     managedByField.append($('<option>', {value: "external", text: 'External program'}));
                     managedByField.val(slot.managedBy);
@@ -212,12 +213,16 @@
                         }
                     });
                     
-                    // Column 4 : Add a hidden (multiline) textarea field (type string) to the new row, to store the file content
+                    // Column 4 : Add a checkbox field to the new row, to show whether the file is executable or not
+                    var executableField = $('<input/>',{class:"node-input-slot-executable",type:"checkbox"}).css({"resize":"none","vertical-align":"baseline","width":"10%","margin-left":"5px","margin-right":"5px"}).appendTo(row);
+                    executableField.prop('checked', slot.executable);
+                    
+                    // Column 5 : Add a hidden (multiline) textarea field (type string) to the new row, to store the file content
                     var fileContentField = $('<textarea/>',{class:"node-input-slot-fileContent",type:"text"}).appendTo(row);
                     fileContentField.hide();
                     fileContentField.val(slot.fileContent);
                     
-                    // Column 5 : Add a button field.
+                    // Column 6 : Add a button field.
                     var buttonField = $('<button><i class="fa fa-eye"></i></button>').css({"resize":"none","vertical-align":"top","width":"8%","height":"34px","margin-left":"5px","margin-right":"5px"}).appendTo(row);
                     buttonField.on("click", function(){
                         var selectedSlotRow = getSelectedSlotRow();
@@ -294,7 +299,7 @@
             // Show all the slots (stored in this node) into the editableList
             if (this.slots) {
                 this.slots.forEach(function (slot, index) {
-                    slotsList.editableList('addItem', {fileName:slot.fileName, managedBy:slot.managedBy, fileContent:slot.fileContent});
+                    slotsList.editableList('addItem', {fileName:slot.fileName, managedBy:slot.managedBy, fileContent:slot.fileContent, executable: slot.executable});
                 });
             }
 
@@ -443,8 +448,9 @@
             var slotsList = $("#node-input-slots-container").editableList('items');
             slotsList.each(function(i) {
                 var slot = $(this);
-                var fileName = slot.find(".node-input-slot-fileName").val();
-                var managedBy = slot.find(".node-input-slot-managedBy").val();
+                var fileName    = slot.find(".node-input-slot-fileName").val();
+                var managedBy   = slot.find(".node-input-slot-managedBy").val();
+                var executable  = slot.find(".node-input-slot-executable").is(':checked');
                 var fileContent = null;
                 
                 // Only store the file content in this node, when this is being managed by Node-RED
@@ -452,7 +458,7 @@
                     fileContent = slot.find(".node-input-slot-fileContent").val();
                 }
                 
-                node.slots.push({fileName:fileName, managedBy:managedBy, fileContent:fileContent});
+                node.slots.push({fileName:fileName, managedBy:managedBy, fileContent:fileContent, executable:executable});
             });
         },
         oneditcancel: function() {
