@@ -125,10 +125,10 @@
                 node.send([msg,null]);
                 
                 if (node.nonContinousListen) {
-					node_status(["wake word detetected","green","dot"],1000,["forwarding audio","blue","ring"]);
-				} else {
-					node_status(["wake word detetected","green","dot"],1000,["listening to stream","blue","dot"]);
-				}
+		    node_status(["wake word detetected","green","dot"],1000,["forwarding audio","blue","ring"]);
+	        } else {
+		    node_status(["wake word detetected","green","dot"],1000,["listening to stream","blue","dot"]);
+		}
                 
             });
             return;
