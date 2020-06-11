@@ -6,29 +6,30 @@
         "chmod": "^0.2.1"
     },
     "author": {
-        "name": "Bart Butenaers"
+        "name": "Johannes Kropf"
     },
     "contributors": [
         {
-            "name": "Johannes Kropf",
-            "url": "https://github.com/johanneskropf"
+            "name": "Bart Butenaers",
+            "url": "https://github.com/bartbutenaers"
         }
     ],
     "license": "Apache-2.0",
     "keywords": [
         "node-red",
-        "compass",
-        "cardinal",
-        "direction",
-        "degree"
+        "voice2json",
+        "stt",
+        "nlu",
+        "kaldi",
+        "precise"
     ],
     "bugs": {
-        "url": "https://github.com/bartbutenaers/node-red-contrib-voice2json/issues"
+        "url": "https://github.com/johanneskropf/node-red-contrib-voice2json/issues"
     },
-    "homepage": "https://github.com/bartbutenaers/node-red-contrib-voice2json",
+    "homepage": "https://github.com/johanneskropf/node-red-contrib-voice2json",
     "repository": {
         "type": "git",
-        "url": "https://github.com/bartbutenaers/node-red-contrib-voice2json.git"
+        "url": "https://github.com/johanneskropf/node-red-contrib-voice2json.git"
     },
     "node-red": {
         "nodes": {
