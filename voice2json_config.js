@@ -21,7 +21,7 @@
         this.profilePath = config.profilePath;
         
         var node = this;
-		
+
         node.on('close', function(){
 		});
     }

@@ -22,6 +22,7 @@
         RED.nodes.createNode(this, config);
         this.inputField  = config.inputField;
         this.outputField = config.outputField;
+		this.nonContinousListen = config.nonContinousListen;
         this.profilePath = "";
         this.statusTimer = false;
         this.statusTimer2 = false;
@@ -88,9 +89,9 @@
             });
             
             node.waitWake.stdout.on('data', (data)=>{
-                if(!node.pauseListening){
+                if (!node.pauseListening && node.nonContinousListen) {
                     node.pauseListening = true;
-                } else {
+                } else if (node.pauseListening && node.nonContinousListen) {
                     node.warn("wake-word detetected but ignoring as as audio is already beeing forwarded");
                     return;
                 }
@@ -101,7 +102,7 @@
                 catch(error) {
                     node.error("Error parsing json output : " + error.message);
                     if(node.waitWake){
-                        node_status(["error parsing json","red","dot"],1500,["listening to stream","blue","ring"]);
+                        node_status(["error parsing json","red","dot"],1500,["listening to stream","blue","dot"]);
                     } else {
                         node_status(["error parsing json","red","dot"],1500);
                     }
@@ -114,7 +115,7 @@
                 } catch(err) {
                     node.error("Error setting value in msg." + node.outputField + " : " + err.message);
                     if(node.waitWake){
-                        node_status(["error","red","dot"],1500,["listening to stream","blue","ring"]);
+                        node_status(["error","red","dot"],1500,["listening to stream","blue","dot"]);
                     } else {
                         node_status(["error","red","dot"],1500);
                     }
@@ -123,7 +124,11 @@
             
                 node.send([msg,null]);
                 
-                node_status(["wake word detetected","green","dot"],1500,["forwarding audio","blue","ring"]);
+                if (node.nonContinousListen) {
+		    node_status(["wake word detetected","green","dot"],1000,["forwarding audio","blue","ring"]);
+	        } else {
+		    node_status(["wake word detetected","green","dot"],1000,["listening to stream","blue","dot"]);
+		}
                 
             });
             return;
