@@ -34,6 +34,7 @@
         this.autoStart = config.autoStart;
         this.msgObj = {};
         this.fileId = "";
+        this.shm = true;
         var node = this;
         
         function node_status(state1 = [], timeout = 0, state2 = []){
@@ -139,13 +140,20 @@
         }
         
         function saveBufferWrite(msg){
+            
             node_status(["processing...","blue","dot"]);
-            node.filePath = "/dev/shm/stt" + node.fileId + ".wav";
+            
+            if (node.shm) {
+                node.filePath = "/dev/shm/stt" + node.fileId + ".wav";
+            } else {
+                node.filePath = "/tmp/stt" + node.fileId + ".wav";
+            }
+            
             try {
                 fs.writeFileSync(node.filePath,node.inputMsg);
             }
             catch (error){
-                node.error("error saving to /dev/shm/" + err.message);
+                node.error("error saving tmp: " + err.message);
                 if(node.transcribeWav){
                     node_status(["couldn't save buffer","red","dot"],1500,["running","blue","ring"]);
                 } else {
@@ -247,6 +255,8 @@
         }
         
         node.fileId = node.id.replace(/\./g,"");
+        
+        if (!fs.existsSync('/dev/shm')) { node.shm = false; }
         
         if(node.autoStart){
             node.warn("starting");
