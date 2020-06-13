@@ -3,7 +3,6 @@
     "version": "1.0.0",
     "description": "Node-RED nodes for local speech and intent recognition via voice2json",
     "dependencies": {
-        "chmod": "^0.2.1"
     },
     "author": {
         "name": "Johannes Kropf"
