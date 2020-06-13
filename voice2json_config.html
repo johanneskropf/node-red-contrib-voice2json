@@ -29,18 +29,17 @@
     }
     
     function setAceEditorReadOnly(aceEditor, readOnly) {
-        // See https://github.com/ajaxorg/ace/issues/266#issuecomment-16351550
+        aceEditor.setReadOnly(readOnly);
+        
+        // Make sure the ACE editor looks really disabled when required.
         if (readOnly) {
-            aceEditor.container.style.pointerEvents="none";
-            aceEditor.container.style.opacity=0.5; // or use svg filter to make it gray
+            aceEditor.container.style.opacity=0.5;
             aceEditor.renderer.setStyle("disabled", true);
-            //aceEditor.blur();
         }
         else {
-            aceEditor.container.style.pointerEvents="auto";
-            aceEditor.container.style.opacity=1; // or use svg filter to make it gray
-            aceEditor.renderer.setStyle("disabled", false);
-            //aceEditor.blur();        
+            //aceEditor.container.style.pointerEvents="auto";
+            aceEditor.container.style.opacity=1;
+            aceEditor.renderer.setStyle("disabled", false);   
         }
     }
 
@@ -52,7 +51,6 @@
             name: {value:""},
             sentences: {value:null},
             slots: {value:[], validate: function (v) {
-            debugger;
                 // Map the list of javascript objects to a file name array
                 var fileNameArray = v.map(function(item){ return item.fileName });
                 
@@ -263,14 +261,15 @@
                             case "external":
                             	//get the content of sentences ini over http endpoint 1st draft
                                 let loadProfilePath = $("#node-config-input-profilePath").val();
-                                
+                
                                 $.ajax({
                                     url: "voice2json-config/loadSlot",
                                     type: "GET",
                                     contentType: "application/json",
                                     data: {
                                         profilePath:loadProfilePath, 
-                                        fileName:fileNameField.val()
+                                        fileName:fileNameField.val(),
+                                        executable:executableField.is(':checked')
                                     },
                                     dataType : "text",
                                     success: function(data, textStatus, request) {
@@ -407,6 +406,85 @@
                 })
 	        });
             
+            $("#node-config-input-removeSlots").click(function(){
+                if($("#node-config-input-removeSlots").prop("checked")){
+                    if (!confirm("If you activate this option slot files that have been added from outside nodered will be deleted.\nYou can use the sync button to get the most recent state of the profile on the file system.\nPlease consider deploying before a sync to save any changes you made from node-red.")) {
+                        $("#node-config-input-removeSlots").prop("checked", false) //uncheck if cancel
+                        return;
+                    }
+                }
+            });
+            
+            $("#node-load-slots").click(function () {
+                if (!confirm("The slot files will be loaded from the filesystem!  Are you sure to continue?")) {
+                    // The user has clicked the 'Cancel' button
+                    return;
+                }
+                
+	            //get the slot files over http endpoint
+	            let loadProfilePath = $("#node-config-input-profilePath").val();
+	            $.ajax({
+                    url: "voice2json-config/loadSlotNames",
+                    type: "GET",
+                    contentType: "application/json",
+                    data: {
+                        profilePath:loadProfilePath
+                    },
+                    dataType : "text",
+                    success: function(data, textStatus, request) {
+                        var jsonData = JSON.parse(data);
+                        
+                        // Get the slot file names that are currently being displayed in the editableList
+                        //var clientNameFields = slotsList.find(".node-input-slot-fileName").toArray();
+                        
+                        jsonData.slotNames.forEach(function (slotName, index) {
+                            var occurences = 0;
+                            
+                            slotsList.find('.node-input-slot-fileName').each(function(i, fileNameField) {
+                                if (fileNameField.value === slotName) {
+                                    occurences++;
+                                }
+                            });
+                            
+                            if (occurences === 0) {
+                                // TODO slot file downloaden via andere http endpoint, en content als 3de parameter doorgeven
+                                slotsList.editableList('addItem', {fileName:slotName, managedBy:"external", executable:false});
+                            }
+                        });
+                        
+                        jsonData.slotProgramNames.forEach(function (slotProgramName, index) {
+                            var occurences = 0;
+                            slotsList.find('.node-input-slot-fileName').each(function(i, fileNameField) {
+                                 if (fileNameField.value === slotProgramName) {
+                                    occurences++;
+                                }
+                            });
+                            
+                            if (occurences === 0) {
+                                // TODO slot file downloaden via andere http endpoint, en content als 3de parameter doorgeven
+                                slotsList.editableList('addItem', {fileName:slotProgramName, managedBy:"external", executable:true});
+                            }
+                        });
+                        
+                        /*
+                        clientNameFields.forEach(function (clientSlotFileName, index) {
+                        // tODO enkel doen als de client slot file type "external is"
+                            if (serverSlotFileNames.indexOf(clientSlotFileName) < 0) {
+                                slotsList.editableList('removeItem', {fileName:clientSlotFileName});
+                            }
+                        });*/
+
+                        /*node.aceEditorSentences.setValue(data);
+                        node.aceEditorSentences.clearSelection();
+                        setAceEditorReadOnly(node.aceEditorSentences, false);
+                        node.originalSentences = data;   */                                 
+                    },
+                    error: function(XMLHttpRequest, textStatus, errorThrown) { 
+                        alert("Cannot load the sentences.ini file: " + errorThrown); 
+                    } 
+                })
+	        });
+            
             // Show two tabsheets
             var tabs = RED.tabs.create({
                 id: "node-tabsheet-tabs",
@@ -494,6 +572,9 @@
                 </div>
             </div>
             <div id="node-slots-tab">
+                <button id="node-load-slots" class="editor-button editor-button-small" style="margin-top: 4px;" title="Load slot files">
+                    <i class="fa fa-download"></i>
+                </button>
                 <div class="form-row form-row-auto-height">
                     <!-- Table with slot files -->
                     <ol id="node-input-slots-container"></ol>
