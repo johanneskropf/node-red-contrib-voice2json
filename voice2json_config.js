@@ -54,7 +54,7 @@
             
             // Remove the file if it has not been specified anymore in the node.slots array
             if (specifiedFiles.length === 0) {
-                var slotFileToRemove = path.join(node.profilePath, "slots", currentSlotFile);
+                var slotFileToRemove = path.join(directory, currentSlotFile);
                 
                 try {
                     fs.unlinkSync(slotFileToRemove);
