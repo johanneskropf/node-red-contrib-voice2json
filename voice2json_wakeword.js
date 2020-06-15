@@ -125,10 +125,10 @@
                 node.send([msg,null]);
                 
                 if (node.nonContinousListen) {
-		    node_status(["wake word detetected","green","dot"],1000,["forwarding audio","blue","ring"]);
-	        } else {
-		    node_status(["wake word detetected","green","dot"],1000,["listening to stream","blue","dot"]);
-		}
+                   node_status(["wake word detetected","green","dot"],1000,["forwarding audio","blue","ring"]);
+                } else {
+                    node_status(["wake word detetected","green","dot"],1000,["listening to stream","blue","dot"]);
+                }
                 
             });
             return;
@@ -166,8 +166,8 @@
             }
         }
         
-        node_status(["waiting for audio","grey","ring"]);
-
+        if (!node.waitWake) { node_status(["waiting for audio","grey","ring"]); }
+        
         node.on("input", function(msg) {
             
             node.inputMsg = RED.util.getMessageProperty(msg, node.inputField);
