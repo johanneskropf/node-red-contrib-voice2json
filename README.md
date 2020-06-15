@@ -26,6 +26,8 @@ docker run -i \
        synesthesiam/voice2json:2.0.0 "$@"
 ```
 
+When using the nodes with the docker container installation you have to download any profile you want to use to a path somewhere in your home directory as otherwise the container will not be able to access it. Another option would be to include the path to your container as an additional `-v` argument in the voice2json docker run bash script.
+
 ## Voice2json introduction
 
 The [voice2json](http://voice2json.org/) project offers a collection of command line speech and intent recognition tools on Linux or in a Docker container.
@@ -49,17 +51,27 @@ This suite contains 5 Node-RED nodes:
 * 16000 Hz
 * 16 bit
 
-### Nodes
+## Nodes
 
-#### Config node
+### Config node
 
-The config node which can be used to store a path to a local voice2json [language profile folder](http://voice2json.org/#supported-languages):
+Create a config node for each installed voice2json language profile.  The config node contains the following information:
 
-![voice2json_config](https://user-images.githubusercontent.com/14224149/80300328-f1861b80-879b-11ea-9fee-0e2c3476527d.gif)
++ A ***path*** to a local voice2json [language profile](http://voice2json.org/#supported-languages) directory.
 
-When using the nodes with the docker container installation you have to download any profile you want to use to a path somewhere in your home directory as otherwise the container will not be able to access it. Another option would be to include the path to your container as an additional `-v` argument in the voice2json docker run bash script.
++ A series of ***sentences*** that needs to be recognized.  These sentences will be stored in the *sentences.ini* file (in the language profile directory).  A button is available to load - once at startup -  the default sentences from that file, to get started quickly...
 
-#### Training node
++ A series of ***slots*** that can be used inside the sentences.  Each of those slots corresponds to a separate slot file, and a slot has a number of properties:
+
+   + A slot ***name***, which needs to be unique.
+   
+   + Whether the slot is ***managed by*** Node-RED or an external program.  In the latter case, the slot content will be read-only in Node-RED since it will be updated by an external background program.
+   
+   + Whether the slot is an ***executable***, which means that the slot is a shell script.  This executable is able to load all the slot values by itself.
+   
+   + The ***content*** of the slot.
+
+### Training node
 
 The training node enables the training of a profile from node-red. 
 
@@ -72,20 +84,20 @@ To start training select the profile to train from the nodes config and than aft
 
 An output message will be sent, containing the training loggings.
 
-#### Wait Wake node
+### Wait Wake node
 
 A node to listen to a stream of raw audio buffers and detect a wake-word. When a wake word was detected it sends an object including the detected wake word, the time of detection relative to the nodes start and a unix timestamp to the first output. If the `Forward audio to 2nd output on detection` option is checked the node will start ignoring any detected wake words after a detection and start forwarding the raw audio chunks to its second output until it receives a payload of `listen` on which it will stop forwarding and start listening for a wake word again. The second output can be directly connected to record command node to record a command after a wake word was detected when in forward mode.
 A possible source for the input stream of raw audio buffers is [node-red-contrib-sox-record](https://github.com/johanneskropf/node-red-contrib-sox-record) which should work out of the box with this node.
 More info about how to set a wake word or train your own can be found in the [voice2json documentation](http://voice2json.org/commands.html#wait-wake).
 
-#### Record Command node
+### Record Command node
 
 A node to record a voice command from a stream of raw audio buffers. The record command node will start recording a voice command from a stream of raw audio buffers as soon as they start arriving on the configured input. It will stop recording when it detects silence / the end of the command. As soon as its stops recording it will send a single buffer to the configured output containing a wav audio object that consists just of the detected speech. If the input audio stream is not stopped it will start recording a new command after a 2 second timeout.
 This nodes input can be directly connected to the second output of the wait wake node in forward mode or any other node that can send a stream of raw audio buffers in the correct format. The output wav buffer can be directly fed to the voice2json stt node for transcription.
 
-#### Speech To Text node
+### Speech To Text node
 
-#### Text To Intent node
+### Text To Intent node
 
 ## Notes on minimizing SD card wear in voice2jsons file based workflow
 
