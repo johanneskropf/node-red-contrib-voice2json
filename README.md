@@ -50,7 +50,8 @@ This suite contains 5 Node-RED nodes:
 * 16 bit
 
 ### Nodes
-#### Config
+
+#### Config node
 
 The config node which can be used to store a path to a local voice2json [language profile folder](http://voice2json.org/#supported-languages):
 
@@ -58,24 +59,33 @@ The config node which can be used to store a path to a local voice2json [languag
 
 When using the nodes with the docker container installation you have to download any profile you want to use to a path somewhere in your home directory as otherwise the container will not be able to access it. Another option would be to include the path to your container as an additional `-v` argument in the voice2json docker run bash script.
 
-#### Train
+#### Training node
 
-The training node enables the training of a profile from node-red. To start training select the profile to train from the nodes config and than after deploying send a `payload`of `train` as the configured input `msg` property. Any Output of the training will be send to the configured output.
+The training node enables the training of a profile from node-red. 
 
-#### Wait Wake
+To start training select the profile to train from the nodes config and than after deploying send a `msg.payload = "train"` via the input message:
+
+![Training flow](https://user-images.githubusercontent.com/14224149/84702422-e0b18500-af56-11ea-8dac-816b22536141.png)
+```
+[{"id":"307ba520.0db2fa","type":"voice2json-training","z":"11289790.c89848","name":"","voice2JsonConfig":"3cf7b405.ee3c5c","inputField":"payload","outputField":"payload","loadedProfile":"","x":410,"y":320,"wires":[["3762bcf3.2585c4"]]},{"id":"6aaceed9.49082","type":"inject","z":"11289790.c89848","name":"Start training","topic":"","payload":"train","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":190,"y":320,"wires":[["307ba520.0db2fa"]]},{"id":"3762bcf3.2585c4","type":"debug","z":"11289790.c89848","name":"Training result","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","targetType":"msg","x":640,"y":320,"wires":[]},{"id":"3cf7b405.ee3c5c","type":"voice2json-config","z":"","profilePath":"/home/pi/voice2json_profile/en-us_kaldi-zamia-2.0","name":"Kaldi english profile","sentences":"[GetTime]\nwhat time is it\ntell me the time\n\n[GetTemperature]\nwhats the temperature\nhow (hot | cold) is it\n\n[GetGarageState]\nis the garage door (open | closed)\n\n[ChangeLightState]\nlight_name = ((living room lamp | garage light) {name}) | <ChangeLightColor.light_name>\nlight_state = (on | off) {state}\n\nturn <light_state> [the] <light_name>\nturn [the] <light_name> <light_state>\n\n[ChangeLightColor]\nlight_name = (bedroom light) {name}\ncolor = (red | green | blue) {color}\n\nset [the] <light_name> [to] <color>\nmake [the] <light_name> <color>","slots":[{"fileName":"slot1","managedBy":"external","fileContent":null,"executable":false},{"fileName":"fold_a/fold_b/fold_c/testslot","managedBy":"external","fileContent":null,"executable":false},{"fileName":"rhasspy/number","managedBy":"external","fileContent":null,"executable":true}],"removeSlots":true}]
+```
+
+An output message will be sent, containing the training loggings.
+
+#### Wait Wake node
 
 A node to listen to a stream of raw audio buffers and detect a wake-word. When a wake word was detected it sends an object including the detected wake word, the time of detection relative to the nodes start and a unix timestamp to the first output. If the `Forward audio to 2nd output on detection` option is checked the node will start ignoring any detected wake words after a detection and start forwarding the raw audio chunks to its second output until it receives a payload of `listen` on which it will stop forwarding and start listening for a wake word again. The second output can be directly connected to record command node to record a command after a wake word was detected when in forward mode.
 A possible source for the input stream of raw audio buffers is [node-red-contrib-sox-record](https://github.com/johanneskropf/node-red-contrib-sox-record) which should work out of the box with this node.
 More info about how to set a wake word or train your own can be found in the [voice2json documentation](http://voice2json.org/commands.html#wait-wake).
 
-#### Record Command
+#### Record Command node
 
 A node to record a voice command from a stream of raw audio buffers. The record command node will start recording a voice command from a stream of raw audio buffers as soon as they start arriving on the configured input. It will stop recording when it detects silence / the end of the command. As soon as its stops recording it will send a single buffer to the configured output containing a wav audio object that consists just of the detected speech. If the input audio stream is not stopped it will start recording a new command after a 2 second timeout.
 This nodes input can be directly connected to the second output of the wait wake node in forward mode or any other node that can send a stream of raw audio buffers in the correct format. The output wav buffer can be directly fed to the voice2json stt node for transcription.
 
-#### Speech To Text
+#### Speech To Text node
 
-#### Text To Intent
+#### Text To Intent node
 
 ## Notes on minimizing SD card wear in voice2jsons file based workflow
 
