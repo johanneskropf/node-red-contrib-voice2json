@@ -76,7 +76,6 @@
         },
         oneditprepare: function() {
             var node = this;
-            
             if (!node.sentences) {
                 //initial text before file was loaded
                 node.sentences = "// Click the load sentences button.\n"+
@@ -140,9 +139,10 @@
             var slotsList = $("#node-input-slots-container").css('height','200px').css('min-height','200px').css('min-width','450px').editableList({
                 header: $("<div>").append($.parseHTML(
                    "<div style='width:5%; margin-left:5px; display: inline-grid'></div>" +
-                   "<div style='width:35%; margin-left:5px; display: inline-grid'><b>File name</b></div>" +
+                   "<div style='width:35%; margin-left:5px; display: inline-grid'><b>Slot Name</b></div>" +
                    "<div style='width:28%; margin-left:5px; display: inline-grid'><b>Managed by</b></div>" +
                    "<div style='width:10%; margin-left:5px; display: inline-grid'><b>Exec</b></div>" +
+                   "<div style='width:10%; margin-left:5px; display: inline-grid'><b>Edit/View</b></div>" +
                    "<div style='width:8%; margin-left:5px; display: inline-grid'></div>")),
                 addItem: function(container, i, slot) {
                     // When slot === {} then we have a new list item (i.e. user pressed the addItem button)
@@ -221,7 +221,11 @@
                     fileContentField.val(slot.fileContent);
                     
                     // Column 6 : Add a button field.
-                    var buttonField = $('<button><i class="fa fa-eye"></i></button>').css({"resize":"none","vertical-align":"top","width":"8%","height":"34px","margin-left":"5px","margin-right":"5px"}).appendTo(row);
+                    var buttonField = $('<button><i></i></button>').css({"resize":"none","vertical-align":"top","width":"8%","height":"34px","margin-left":"5px","margin-right":"5px"}).appendTo(row);
+                    (managedByField.val() === 'nodered') ? buttonField.find('i').addClass("fa fa-pencil-square-o") : buttonField.find('i').addClass("fa fa-eye");
+                    managedByField.on("change", function() {
+                        (managedByField.val() === 'nodered') ? buttonField.find('i').removeClass("fa fa-eye").addClass("fa fa-pencil-square-o") : buttonField.find('i').removeClass("fa fa-pencil-square-o").addClass("fa fa-eye");
+                    });
                     buttonField.on("click", function(){
                         var selectedSlotRow = getSelectedSlotRow();
                                 
@@ -252,16 +256,38 @@
                         // Show the file name of this row in the selection label (above the ace editor)
                         $("#node-selected-file-label").html('Content of slot file <i><b>"' + fileNameField.val() + '"</b></i>:' );
                         
+                        let loadProfilePath = $("#node-config-input-profilePath").val();
                         // Show the slot content in the ACE editor
                         switch (managedByField.val()) {
-                            case "nodered":                      
-                                node.aceEditorSlot.setValue(fileContentField.val());
-                                node.aceEditorSlot.clearSelection();
+                            case "nodered":
+                                if (fileContentField.val().length === 0) {
+                                    $.ajax({
+                                        url: "voice2json-config/loadSlot",
+                                        type: "GET",
+                                        contentType: "application/json",
+                                        data: {
+                                            profilePath:loadProfilePath, 
+                                            fileName:fileNameField.val(),
+                                            executable:executableField.is(':checked')
+                                        },
+                                        dataType : "text",
+                                        success: function(data, textStatus, request) {
+                                            node.aceEditorSlot.setValue(data);
+                                            node.aceEditorSlot.clearSelection();                                    
+                                        },
+                                        error: function(XMLHttpRequest, textStatus, errorThrown) { 
+                                             node.aceEditorSlot.setValue(fileContentField.val());
+                                             node.aceEditorSlot.clearSelection();
+                                        } 
+                                    });
+                                } else {
+                                    node.aceEditorSlot.setValue(fileContentField.val());
+                                    node.aceEditorSlot.clearSelection();
+                                }
                                 break;
+                                
                             case "external":
                             	//get the content of sentences ini over http endpoint 1st draft
-                                let loadProfilePath = $("#node-config-input-profilePath").val();
-                
                                 $.ajax({
                                     url: "voice2json-config/loadSlot",
                                     type: "GET",
@@ -505,6 +531,7 @@
         },
         oneditsave: function() {
             var node = this;
+            let loadProfilePath = $("#node-config-input-profilePath").val();
             
             //get the content of ace and check if the sentences.ini was loaded and changed
             node.sentences = node.aceEditorSentences.getValue();
@@ -534,8 +561,28 @@
                 // Only store the file content in this node, when this is being managed by Node-RED
                 if (managedBy === "nodered") {
                     fileContent = slot.find(".node-input-slot-fileContent").val();
+                    if (fileContent.length === 0) {
+                        console.log('this one is empty: ' + fileContent);
+                        $.ajax({
+                            url: "voice2json-config/loadSlot",
+                            type: "GET",
+                            contentType: "application/json",
+                            data: {
+                                profilePath:loadProfilePath, 
+                                fileName:fileName,
+                                executable:executable
+                            },
+                            dataType : "text",
+                            async: false,
+                            success: function(data, textStatus, request) {
+                                fileContent = data;
+                            },
+                            error: function(XMLHttpRequest, textStatus, errorThrown) { 
+                                fileContent = "";
+                            } 
+                        });
+                    }
                 }
-                
                 node.slots.push({fileName:fileName, managedBy:managedBy, fileContent:fileContent, executable:executable});
             });
         },
