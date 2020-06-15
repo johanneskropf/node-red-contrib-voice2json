@@ -61,15 +61,73 @@ Create a config node for each installed voice2json language profile.  The config
 
 + A series of ***sentences*** that needs to be recognized.  These sentences will be stored in the *sentences.ini* file (in the language profile directory).  A button is available to load - once at startup -  the default sentences from that file, to get started quickly...
 
-+ A series of ***slots*** that can be used inside the sentences.  Each of those slots corresponds to a separate slot file, and a slot has a number of properties:
+   The [grammar](http://voice2json.org/sentences.html) for sentences is quite extensive, for example:
+   ```
+   [Weather]
+   day = (today | tomorrow | now){time}
+   how is the weather
+   what is the weather [like]
+   (what | how) is the weather <day>
+   ```
+   
+   Some explanation about this snippet:
+   + `[Weather]` marks the start of one intent and defines its name as it will show up in the parsed intent.
+   + `day = (today | tomorrow | now)` is a ***rule*** that can be used in sentences like `<day>`.
+   + `{time}` is a ***tag*** which will show up in the parsed intent as the name of this value when it was recognized. 
+   + `|` is used to separate a series of possible values, which means we expect either one of these values.
+   + `how is the weather` is just a simple fixed sentence.
+   + `[like]` is an optional word.
 
-   + A slot ***name***, which needs to be unique.
+   This will result in the following sentences that can be recognized:
+   ```
+   what is the weather today
+   what is the weather tomorrow
+   what is the weather now
+   how is the weather today
+   how is the weather tomorrow
+   how is the weather now
+   Will result in the following sentences:
+   ```
++ A series of ***slots*** which are similar to rules, and can be used inside the sentences.  Each of those slots corresponds to a separate slot file, which has one value per line.  Using slots (instead of rules) will keep the content of the sentences.ini file cleaner.  Moreover a slot file can be updated by an external background program or it can be an executable, to be able to build dynamically a list of values (e.g. to create an up-to-date movie list from your mediacenter).
+
+   A slot has a number of properties:
+
+   + A slot ***name***, which needs to be unique.  The slot name is in fact a file name (without extension).
    
    + Whether the slot is ***managed by*** Node-RED or an external program.  In the latter case, the slot content will be read-only in Node-RED since it will be updated by an external background program.
    
    + Whether the slot is an ***executable***, which means that the slot is a shell script.  This executable is able to load all the slot values by itself.
    
-   + The ***content*** of the slot.
+   + The ***content*** of the slot.  
+   
+   For example a slot file called weekdays could contain the following values:
+   ```
+   monday
+   tuesday
+   wednesday
+   thursday
+   friday
+   saturday
+   friday
+   ```
+   Can be used it in our sentences.ini like this:
+   ```
+   (what | how) is the weather (<day> | on ($weekday){weekday})
+   ```
+   Where `($weekday)` references our weekday slot file, and the tag {weekday} is added for the intent recognition .
+   This way a sentence like *"how is the weather on tuesday"* can be recognize, and also all the possible permutations.
+
+   It is also possible to use the weekday slot in another intent, by using these sentences:
+   ```
+   [Calendar]
+   do i have (an appointment | appointments)  [(today | on ($weekday){weekdays})]
+
+   [Weather]
+   day = (today | tomorrow | now){time}
+   how is the weather
+   what is the weather [like]
+   (what | how) is the weather (<day> | on ($weekday){weekday})
+   ```
 
 ### Training node
 
