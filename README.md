@@ -96,7 +96,31 @@ Create a config node for each installed voice2json language profile.  The config
    
    + Whether the slot is ***managed by*** Node-RED or an external program.  In the latter case, the slot content will be read-only in Node-RED since it will be updated by an external background program.
    
-   + Whether the slot is an ***executable***, which means that the slot is a shell script.  This executable is able to load all the slot values by itself.
+   + Whether the slot is an ***executable***, which means that the slot is a shell script.  This executable is able to load all the slot values by itself.  For example:
+      ```
+      #!/usr/bin/env node
+      const http = require('http');
+
+      http.get('http://localhost:1880/test_http', (resp) => {
+         let data = '';
+         resp.on('data', (chunk) => {
+            data += chunk;
+         });
+         resp.on('end', () => {
+            const parsedData = JSON.parse(data);
+            parsedData.forEach(item => console.log(item));
+            return;
+         });
+      }).on("error", (err) => {
+         return;
+      });
+      ```
+     This executable slot file will load data via a http request from your Node-RED flow (at training time!), which means you can extend your Node-RED flow to compose an array of values dynamically:
+     
+     ![Executable slot flow](https://user-images.githubusercontent.com/14224149/84831161-2049a100-b02b-11ea-9a87-6af2035e17bd.png)
+     
+     TODO: export flow and share it here ...
+     TODO: show a flow with a file-out node to write a slot file from your node-red flow, and afterwards start the training...
    
    + The ***content*** of the slot.  
    
@@ -140,7 +164,18 @@ To start training select the profile to train from the nodes config and than aft
 [{"id":"307ba520.0db2fa","type":"voice2json-training","z":"11289790.c89848","name":"","voice2JsonConfig":"3cf7b405.ee3c5c","inputField":"payload","outputField":"payload","loadedProfile":"","x":410,"y":320,"wires":[["3762bcf3.2585c4"]]},{"id":"6aaceed9.49082","type":"inject","z":"11289790.c89848","name":"Start training","topic":"","payload":"train","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":190,"y":320,"wires":[["307ba520.0db2fa"]]},{"id":"3762bcf3.2585c4","type":"debug","z":"11289790.c89848","name":"Training result","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","targetType":"msg","x":640,"y":320,"wires":[]},{"id":"3cf7b405.ee3c5c","type":"voice2json-config","z":"","profilePath":"/home/pi/voice2json_profile/en-us_kaldi-zamia-2.0","name":"Kaldi english profile","sentences":"[GetTime]\nwhat time is it\ntell me the time\n\n[GetTemperature]\nwhats the temperature\nhow (hot | cold) is it\n\n[GetGarageState]\nis the garage door (open | closed)\n\n[ChangeLightState]\nlight_name = ((living room lamp | garage light) {name}) | <ChangeLightColor.light_name>\nlight_state = (on | off) {state}\n\nturn <light_state> [the] <light_name>\nturn [the] <light_name> <light_state>\n\n[ChangeLightColor]\nlight_name = (bedroom light) {name}\ncolor = (red | green | blue) {color}\n\nset [the] <light_name> [to] <color>\nmake [the] <light_name> <color>","slots":[{"fileName":"slot1","managedBy":"external","fileContent":null,"executable":false},{"fileName":"fold_a/fold_b/fold_c/testslot","managedBy":"external","fileContent":null,"executable":false},{"fileName":"rhasspy/number","managedBy":"external","fileContent":null,"executable":true}],"removeSlots":true}]
 ```
 
-An output message will be sent, containing the training loggings.
+An output message will be sent, containing the training commandline output lines:
+```
+result:
+/usr/lib/voice2json/lib/kaldi/egs/wsj/s5/utils/prepare_lang.sh /home/pi/de_kaldi-zamia-2.0/acoustic_model/data/local/dict  /home/pi/de_kaldi-zamia-2.0/acoustic_model/data/local/lang /home/pi/de_kaldi-zamia-2.0/acoustic_model/data/lang
+Checking /home/pi/de_kaldi-zamia-2.0/acoustic_model/data/local/dict/silence_phones.txt ...
+--> reading /home/pi/de_kaldi-zamia-2.0/acoustic_model/data/local/dict/silence_phones.txt
+--> text seems to be UTF-8 or ASCII, checking whitespaces
+--> text contains only allowed whitespaces
+--> /home/pi/de_kaldi-zamia-2.0/acoustic_model/data/local/dict/silence_phones.txt is OK
+...
+```
+Since the output is a big blob of text (instead of json), the Node-RED debug panel will not show the entire output.  Best way to see the whole training result is to write the training node output to a file, by using the File-Out node...
 
 ### Wait Wake node
 
@@ -155,6 +190,23 @@ This nodes input can be directly connected to the second output of the wait wake
 
 ### Speech To Text node
 
+![STT flow](https://user-images.githubusercontent.com/14224149/84831754-31df7880-b02c-11ea-80b2-099a341172a1.png)
+```
+[{"id":"c23b841b.40e068","type":"voice2json-stt","z":"11289790.c89848","name":"","voice2JsonConfig":"3cf7b405.ee3c5c","inputType":"msg","inputField":"payload","outputField":"payload","autoStart":true,"x":880,"y":160,"wires":[["faef3d3a.f726d"]]},{"id":"faef3d3a.f726d","type":"debug","z":"11289790.c89848","name":"Show text","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","targetType":"msg","x":1060,"y":160,"wires":[]},{"id":"4402e1cd.bc321","type":"http request","z":"11289790.c89848","name":"","method":"GET","ret":"bin","paytoqs":false,"url":"https://www.pacdv.com/sounds/voices/open-the-goddamn-door.wav","tls":"","persist":false,"proxy":"","authType":"","x":670,"y":160,"wires":[["c23b841b.40e068"]]},{"id":"dd141eca.7d435","type":"inject","z":"11289790.c89848","name":"Execute STT","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":470,"y":160,"wires":[["4402e1cd.bc321"]]},{"id":"32556859.85b628","type":"inject","z":"11289790.c89848","name":"Start","topic":"","payload":"start","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":690,"y":40,"wires":[["c23b841b.40e068"]]},{"id":"29e1ad9f.a53e32","type":"inject","z":"11289790.c89848","name":"Stop","topic":"","payload":"stop","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":690,"y":80,"wires":[["c23b841b.40e068"]]},{"id":"3cf7b405.ee3c5c","type":"voice2json-config","z":"","profilePath":"/home/pi/voice2json_profile/en-us_kaldi-zamia-2.0","name":"Kaldi english profile","sentences":"[GetTime]\nwhat time is it\ntell me the time\n\n[GetTemperature]\nwhats the temperature\nhow (hot | cold) is it\n\n[GetGarageState]\nis the garage door (open | closed)\n\n[ChangeLightState]\nlight_name = ((living room lamp | garage light) {name}) | <ChangeLightColor.light_name>\nlight_state = (on | off) {state}\n\nturn <light_state> [the] <light_name>\nturn [the] <light_name> <light_state>\n\n[ChangeLightColor]\nlight_name = (bedroom light) {name}\ncolor = (red | green | blue) {color}\n\nset [the] <light_name> [to] <color>\nmake [the] <light_name> <color>","slots":[{"fileName":"slot1","managedBy":"external","fileContent":null,"executable":false},{"fileName":"fold_a/fold_b/fold_c/testslot","managedBy":"external","fileContent":null,"executable":false},{"fileName":"rhasspy/number","managedBy":"external","fileContent":null,"executable":true}],"removeSlots":true}]
+```
+
+1. Make sure the STT node has been started.  This can be done either by activating the *"auto start transcriber"* checkbox on the config screen, or by injecting an input message with `msg.payload="start"` (and stopped via `msg.payload="stop"`).
+1. Once started, start injecting input images containing WAV audio buffers via `msg.payload`.
+1. The STT node will try to recognize the sentences, which have been specified in the config node.
+1. The output message will contain the recognized text.
+
+Be aware that the node will recognize the sentence which is the ***closest*** (i.e. the statistically most likely result), even if it doesn't match exactly.  The recognition is based only on the limited vocabulary you used in the sentences.  To be able to run voice recognition fast on modest hardware (like a Raspberry PI 3),  we need to use a small language model that guesses from your limited set of sentences.  It will always try to fit whatever you throw at it into the model it knows...
+
+This side effect can be reduced in a number of ways:
++ TODO "Some people over on the rhasspy side work around this by creating error intents with the most common words of their language as one long sentence." : can we do something similar?
++ TODO "There is a likelihood score in the stt output which is semi useful. What works best to sort out random combinations is the confidence score you get in the tti response under msg.payload.intent.confidence. That combined with an error slot is a good approach in my experience." : can we do something similar?
++ Use accurate wake words, to make sure it only listens when you actually say something that is directed at it.
+
 ### Text To Intent node
 
 ## Notes on minimizing SD card wear in voice2jsons file based workflow
@@ -168,3 +220,10 @@ This is why we implemented a feature were you can pass the wav data as a single 
 On hardware similiar to a Raspberry Pi another possible approach would be to create your own folder that is mounted to tmpfs via fstab.
 You can do this by creating a folder using the `mkdir`command for example `mkdir /home/pi/tmp` and than adding the line `tmpfs  /home/pi/tmp  tmpfs  defaults,noatime,size=100m  0 0` to `/etc/fstab`. After a reboot `/home/pi/tmp`will be mounted to ram. This means that data in it will be lost upon reboot but sd card writes will be greatly reduced.
 More information on this approach can be found here: https://www.zdnet.com/article/raspberry-pi-extending-the-life-of-the-sd-card/.
+
+## Limitations
++ This node does not identify voices from different persons, e.g. to support sentences like *"Play my favorite music"*.  You could workaround this by running multiple wake words in parallel, one for each person. But that’s a very resource intensive workaround/hack.
+
+## Hardware setup
+
+TODO: show some setups, like e.g. live streaming from a Zero to a central RPI with wake word detection.  
