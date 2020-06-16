@@ -152,6 +152,7 @@
             
         }
         
+        if (!node.waitWake) { node_status(["waiting for audio","grey","ring"]); }
         // Retrieve the config node
         node.voice2JsonConfig = RED.nodes.getNode(config.voice2JsonConfig);
         
