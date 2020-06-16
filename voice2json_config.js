@@ -125,15 +125,19 @@
         
         node.slots.forEach(function (slot, index) {
             var directory;
+            var checkDirectory;
 
             if (slot.executable) {
                 directory = slotProgramsDirectory;
+                checkDirectory = slotsDirectory;
             }
             else {
                 directory = slotsDirectory;
+                checkDirectory = slotProgramsDirectory;
             }
             
             var slotFilePath = path.join(directory, slot.fileName);
+            var checkSlotFilePath = path.join(checkDirectory, slot.fileName);
             
             //Create all the specified slot files, when they don't exist yet
             if (!fs.existsSync(slotFilePath)) {
@@ -170,6 +174,18 @@
                         return; // Process next slot file
                     }
                 }
+            }
+            
+            if (fs.existsSync(checkSlotFilePath)) {
+                
+                try {
+                    fs.unlinkSync(checkSlotFilePath);
+                }
+                catch(err) {
+                    node.error('Cannot remove ' + checkSlotFilePath + ' that was in wrong subfolder: ' + err);
+                    return; // Process next slot file
+                }
+                
             }
 
             // Write the specified content to the slot files (only for files that are managed by Node-RED)
