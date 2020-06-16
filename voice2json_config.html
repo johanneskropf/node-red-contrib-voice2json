@@ -140,7 +140,7 @@
                 header: $("<div>").append($.parseHTML(
                    "<div style='width:5%; margin-left:5px; display: inline-grid'></div>" +
                    "<div style='width:35%; margin-left:5px; display: inline-grid'><b>Slot Name</b></div>" +
-                   "<div style='width:28%; margin-left:5px; display: inline-grid'><b>Managed by</b></div>" +
+                   "<div style='width:28%; margin-left:5px; display: inline-grid'><b>Managed from</b></div>" +
                    "<div style='width:10%; margin-left:5px; display: inline-grid'><b>Exec</b></div>" +
                    "<div style='width:10%; margin-left:5px; display: inline-grid'><b>Edit/View</b></div>" +
                    "<div style='width:8%; margin-left:5px; display: inline-grid'></div>")),
@@ -194,8 +194,8 @@
                     
                     // Column 3 : Add a dropdown field (type string) to the new row, that represents how the file is managed (by Node-RED or not)
                     var managedByField = $('<select/>', {class: "node-input-slot-managedBy", style: "width:28%; margin-right:10px;", type: "text"}).appendTo(row);
-                    managedByField.append($('<option>', {value: "nodered", text: 'Node-RED'}));
-                    managedByField.append($('<option>', {value: "external", text: 'External program'}));
+                    managedByField.append($('<option>', {value: "nodered", text: 'this config screen'}));
+                    managedByField.append($('<option>', {value: "external", text: 'other source'}));
                     managedByField.val(slot.managedBy);
                     managedByField.on("change", function() {
                         // When the content of this slot is currently being visualized, then immediately set it readonly or not
@@ -211,10 +211,13 @@
                         }
                     });
                     
-                    // Column 4 : Add a checkbox field to the new row, to show whether the file is executable or not
+                    // Column 4 : Add a checkbox field to the new row, to show whether the file is executable or not, disable enable dependent on managed
                     var executableField = $('<input/>',{class:"node-input-slot-executable",type:"checkbox"}).css({"resize":"none","vertical-align":"baseline","width":"10%","margin-left":"5px","margin-right":"5px"}).appendTo(row);
                     executableField.prop('checked', slot.executable);
-                    
+                    (managedByField.val() === 'nodered') ? executableField.attr("disabled", false) : executableField.attr("disabled", true);
+                    managedByField.on("change", function() {
+                        (managedByField.val() === 'nodered') ? executableField.attr("disabled", false) : executableField.attr("disabled", true);
+                    });
                     // Column 5 : Add a hidden (multiline) textarea field (type string) to the new row, to store the file content
                     var fileContentField = $('<textarea/>',{class:"node-input-slot-fileContent",type:"text"}).appendTo(row);
                     fileContentField.hide();
@@ -222,6 +225,7 @@
                     
                     // Column 6 : Add a button field.
                     var buttonField = $('<button><i></i></button>').css({"resize":"none","vertical-align":"top","width":"8%","height":"34px","margin-left":"5px","margin-right":"5px"}).appendTo(row);
+                    // change icon dependent on if read only
                     (managedByField.val() === 'nodered') ? buttonField.find('i').addClass("fa fa-pencil-square-o") : buttonField.find('i').addClass("fa fa-eye");
                     managedByField.on("change", function() {
                         (managedByField.val() === 'nodered') ? buttonField.find('i').removeClass("fa fa-eye").addClass("fa fa-pencil-square-o") : buttonField.find('i').removeClass("fa fa-pencil-square-o").addClass("fa fa-eye");
