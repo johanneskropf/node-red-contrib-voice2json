@@ -27,6 +27,8 @@
         this.statusTimer = false;
         this.statusTimer2 = false;
         this.pauseListen = false;
+        this.initialTimeout = false;
+        this.initialTimeoutTimer = false;
         var node = this;
         
         function node_status(state1 = [], timeout = 0, state2 = []){
@@ -55,6 +57,20 @@
                     
                 },timeout);
             }
+            
+        }
+        
+        function initialTimeoutFunction() {
+            
+            node.initialTimeout = true;
+            if (node.initialTimeoutTimer) {
+                clearTimeout(node.initialTimeoutTimer);
+                node.initialTimeoutTimer = false;
+            }
+            node.initialTimeoutTimer = setTimeout(() => {
+                node.initialTimeout = false;
+                node.initialTimeoutTimer = false;
+            }, 2000);
             
         }
         
@@ -152,7 +168,8 @@
             
         }
         
-        if (!node.waitWake) { node_status(["waiting for audio","grey","ring"]); }
+        initialTimeoutFunction();
+        node_status(["waiting for audio","grey","ring"]);
         // Retrieve the config node
         node.voice2JsonConfig = RED.nodes.getNode(config.voice2JsonConfig);
         
@@ -167,9 +184,10 @@
             }
         }
         
-        if (!node.waitWake) { node_status(["waiting for audio","grey","ring"]); }
         
         node.on("input", function(msg) {
+            
+            if (node.initialTimeout) { return; }
             
             node.inputMsg = RED.util.getMessageProperty(msg, node.inputField);
             
@@ -179,6 +197,7 @@
                     
                     if(node.waitWake){
                         
+                        initialTimeoutFunction();
                         process.kill(-node.waitWake.pid);
                         
                     } else {
@@ -214,6 +233,11 @@
         node.on("close",function() {
             
             node_status();
+            
+            if (node.initialTimeoutTimer) {
+                clearTimeout(node.initialTimeoutTimer);
+                node.initialTimeoutTimer = false;
+            }
             
             if(node.waitWake) {
                 process.kill(-node.waitWake.pid);
