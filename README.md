@@ -195,19 +195,36 @@ This nodes input can be directly connected to the second output of the wait wake
 [{"id":"c23b841b.40e068","type":"voice2json-stt","z":"11289790.c89848","name":"","voice2JsonConfig":"3cf7b405.ee3c5c","inputType":"msg","inputField":"payload","outputField":"payload","autoStart":true,"x":880,"y":160,"wires":[["faef3d3a.f726d"]]},{"id":"faef3d3a.f726d","type":"debug","z":"11289790.c89848","name":"Show text","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","targetType":"msg","x":1060,"y":160,"wires":[]},{"id":"4402e1cd.bc321","type":"http request","z":"11289790.c89848","name":"","method":"GET","ret":"bin","paytoqs":false,"url":"https://www.pacdv.com/sounds/voices/open-the-goddamn-door.wav","tls":"","persist":false,"proxy":"","authType":"","x":670,"y":160,"wires":[["c23b841b.40e068"]]},{"id":"dd141eca.7d435","type":"inject","z":"11289790.c89848","name":"Execute STT","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":470,"y":160,"wires":[["4402e1cd.bc321"]]},{"id":"32556859.85b628","type":"inject","z":"11289790.c89848","name":"Start","topic":"","payload":"start","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":690,"y":40,"wires":[["c23b841b.40e068"]]},{"id":"29e1ad9f.a53e32","type":"inject","z":"11289790.c89848","name":"Stop","topic":"","payload":"stop","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":690,"y":80,"wires":[["c23b841b.40e068"]]},{"id":"3cf7b405.ee3c5c","type":"voice2json-config","z":"","profilePath":"/home/pi/voice2json_profile/en-us_kaldi-zamia-2.0","name":"Kaldi english profile","sentences":"[GetTime]\nwhat time is it\ntell me the time\n\n[GetTemperature]\nwhats the temperature\nhow (hot | cold) is it\n\n[GetGarageState]\nis the garage door (open | closed)\n\n[ChangeLightState]\nlight_name = ((living room lamp | garage light) {name}) | <ChangeLightColor.light_name>\nlight_state = (on | off) {state}\n\nturn <light_state> [the] <light_name>\nturn [the] <light_name> <light_state>\n\n[ChangeLightColor]\nlight_name = (bedroom light) {name}\ncolor = (red | green | blue) {color}\n\nset [the] <light_name> [to] <color>\nmake [the] <light_name> <color>","slots":[{"fileName":"slot1","managedBy":"external","fileContent":null,"executable":false},{"fileName":"fold_a/fold_b/fold_c/testslot","managedBy":"external","fileContent":null,"executable":false},{"fileName":"rhasspy/number","managedBy":"external","fileContent":null,"executable":true}],"removeSlots":true}]
 ```
 
-1. Make sure the STT node has been started.  This can be done either by activating the *"auto start transcriber"* checkbox on the config screen, or by injecting an input message with `msg.payload="start"` (and stopped via `msg.payload="stop"`).
-1. Once started, start injecting input images containing WAV audio buffers via `msg.payload`.
-1. The STT node will try to recognize the sentences, which have been specified in the config node.
-1. The output message will contain the recognized text.
-
-Be aware that the node will recognize the sentence which is the ***closest*** (i.e. the statistically most likely result), even if it doesn't match exactly.  The recognition is based only on the limited vocabulary you used in the sentences.  To be able to run voice recognition fast on modest hardware (like a Raspberry PI 3),  we need to use a small language model that guesses from your limited set of sentences.  It will always try to fit whatever you throw at it into the model it knows...
-
-This side effect can be reduced in a number of ways:
-+ TODO "Some people over on the rhasspy side work around this by creating error intents with the most common words of their language as one long sentence." : can we do something similar?
-+ TODO "There is a likelihood score in the stt output which is semi useful. What works best to sort out random combinations is the confidence score you get in the tti response under msg.payload.intent.confidence. That combined with an error slot is a good approach in my experience." : can we do something similar?
-+ Use accurate wake words, to make sure it only listens when you actually say something that is directed at it.
+1. The STT node has different modes of startup. It has an auto-start at deployment mode that can be enabled by activating the *"auto start transcriber"* checkbox on the config screen, by injecting an input message with `msg.payload="start"` (and stopped via `msg.payload="stop"`) or by sending a valid payload containing a buffer with wav data or a path to a wav audio file.
+The first two modes of starting before passing data to the node have the advantage that voice2json can load its resources before audio arrives which greatly reduces the time of the first transcription.
+2. Once started, start injecting input data containing a WAV audio buffer or the path to a WAV file via `msg.payload`.
+3. The STT node will try to recognize the sentences, which have been specified in the sentences tab of the config node (*you need to retrain if you change your slots or sentences and restart the stt node for the stt node to pick those changes*).
+4. The output message will be an object in the configured `msg.property`. The property **text** of this object contains the recognized text as a string. Here is an example output object:
+```
+{
+   "text":"großeswohnzimmerlicht",
+   "likelihood":1,
+   "transcribe_seconds":0.9190294530708343,
+   "wav_seconds":1.65,"tokens":null,
+   "wav_name":"stt6c07d69a121de8.wav"
+}
+```
 
 ### Text To Intent node
+
+### *Notes on some principles in how the transcription / intent recognition works in voice2json*
+
+To learn about how voive2json works in detail and better understand how it works we recommend to have a look at the [whitepaper about the whole process](http://voice2json.org/whitepaper.html) by the voice2json project.
+Some basics are:
+Voice2json creates a [dictionary](http://voice2json.org/whitepaper.html#pronunciation-dictionary) and a [language model](http://voice2json.org/whitepaper.html#language-model) from your sentences at training time.
+At runtime on transcription/recognition voice2json will recognize the sentence which is the ***closest*** (i.e. the statistically most likely result), even if it doesn't match exactly.  The recognition is based only on the this limited vocabulary you used in the sentences.  This is necessary to be able to run voice recognition fast on modest hardware (like a Raspberry PI 3),  thats why voice2json uses this small language model and dictionary that it creates at training time from the limited set of sentences which you configured in the config node. It will always try to fit whatever audio you pass to it for transcription into the model and vocabulary it build it from those sentences.
+
+The side effects like false positives on random audio can be reduced with a number of strategies:
+
++ One way would be to mix in a certain amount of the base language model from the profile your using. [The process for this is decribed here](http://voice2json.org/commands.html#language-model-mixing). This comes with a huge performance cost and will slow transcription by a factor of 3-4 times.
++ You can create a ***NULL*** intent. This would be an intent that includes either on one line or multiple lines some of the most common word including nouns, adjectives, verbs and articles of the language your using. Although it will reduce the accurracy of the recognition a little bit this will reduce the chance that random audio will be classified as one of your intents.  
++ In the object that the TTI node returns is a sub property under `intent.confidence` that gives a score between *0* and *1* on how close the transcription text was to the actual intent. This property can be used to sort out intents that are impropable. This is especially usefull together with a *NULL* intent.
++ The use of an accurate wake words, to make sure it only listens when you actually say something that is directed at it. The less random audio arrives at your stt and tti nodes the smaller the change of a fasle positive intent recognition becomes.
 
 ## Notes on minimizing SD card wear in voice2jsons file based workflow
 
@@ -215,11 +232,11 @@ The voice2json workflow is based on a few differnt concepts. One of them is that
 `All of the available commands are designed to work well in Unix pipelines, typically consuming/emitting plaintext or newline-delimited JSON. Audio input/output is file-based, so you can receive audio from any source.`
 The Node-RED wrapper we provide parses the emitted results from JSON to msg objects that you can very easily integrate into an existing Node-RED flow but you will still have to save audio data you want to process outside of Node-RED on your filesystem.
 If you run Node-RED and voice2json on an SBC that uses a file system on a medium like an SD card it would be preferable to prevent unnecessary writes and work with data in memory.
-This is why we implemented a feature were you can pass the wav data as a single buffer object to the stt node. As we need to have a copy of the wav in the file system we use the `/dev/shm/` directory to write a tmp copy of the passed in buffer.
-'/dev/shm' is mounted to ram by default and you can read more about it [here](https://www.cyberciti.biz/tips/what-is-devshm-and-its-practical-usage.html).
-On hardware similiar to a Raspberry Pi another possible approach would be to create your own folder that is mounted to tmpfs via fstab.
-You can do this by creating a folder using the `mkdir`command for example `mkdir /home/pi/tmp` and than adding the line `tmpfs  /home/pi/tmp  tmpfs  defaults,noatime,size=100m  0 0` to `/etc/fstab`. After a reboot `/home/pi/tmp`will be mounted to ram. This means that data in it will be lost upon reboot but sd card writes will be greatly reduced.
-More information on this approach can be found here: https://www.zdnet.com/article/raspberry-pi-extending-the-life-of-the-sd-card/.
+This is why we implemented a feature were you can pass the wav data as a single buffer object to the stt node. As we need to have a copy of the wav in the file system we use the `/dev/shm/` directory to write a tmp copy of the passed in buffer. (if `/dev/shm/` is not available we will use the `/tmp/` directory, this is less ideal and you need to include this instead of `/dev/shm/` in your docker file if you choose the docker install)
+`/dev/shm/` is mounted to ram by default and you can read more about it [here](https://www.cyberciti.biz/tips/what-is-devshm-and-its-practical-usage.html).
+
+On hardware similiar to a Raspberry Pi another possible approach would be to create your own folder that is mounted to tmpfs via fstab. You can do this by creating a folder using the `mkdir`command for example `mkdir /home/pi/tmp` and than adding the line `tmpfs  /home/pi/tmp  tmpfs  defaults,noatime,size=100m  0 0` to `/etc/fstab`. After a reboot `/home/pi/tmp`will be mounted to ram. This means that data in it will be lost upon reboot but sd card writes will be greatly reduced. You would now instead of sending a buffer containing the WAV data to the node pass in the path to the file in your own memory mounted folder.
+More information on this approach can be found [here](https://www.zdnet.com/article/raspberry-pi-extending-the-life-of-the-sd-card/).
 
 ## Limitations
 + This node does not identify voices from different persons, e.g. to support sentences like *"Play my favorite music"*.  You could workaround this by running multiple wake words in parallel, one for each person. But that’s a very resource intensive workaround/hack.
