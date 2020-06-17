@@ -4,7 +4,7 @@
 
 Node-RED nodes that provide a simple wrapper for local speech and intent recognition on linux via [voice2json](http://voice2json.org/).
 
-Thanks to [Bart Butenaers](https://github.com/bartbutenaers), my partner in crime for this node!  He came up with the crazy idea that i should get involved in this business of node-red node development and without him his knowledge and his huge contribution to this node it wouldn't be here today.
+Thanks to [Bart Butenaers](https://github.com/bartbutenaers), my partner in crime for this node!  He came up with the crazy idea that I should get involved in this business of node-red node development, and without his knowledge and his huge contribution to this node it wouldn't be here today.
 
 ## Install
 Run the following npm command in your Node-RED user directory (typically ~/.node-red):
@@ -44,7 +44,7 @@ The [voice2json](http://voice2json.org/) project offers a collection of command 
 
 This suite offers 5 Node-RED nodes in the Node-RED palette, located in the *"Voice2Json"* section:
 
-![Palette](https://user-images.githubusercontent.com/14224149/84939047-04530780-b0de-11ea-9c6c-f2621406ff95.png)
+![Palette](https://user-images.githubusercontent.com/14224149/84941338-85f86480-b0e1-11ea-830c-c9950c1456c3.png)
 
 Note that all the example flows from this page can easily be installed via the Node-RED *"Import"* menu:
 
@@ -261,6 +261,13 @@ More information on this approach can be found [here](https://www.zdnet.com/arti
 ## Limitations
 + This node does not identify voices from different persons, e.g. to support sentences like *"Play my favorite music"*.  You could workaround this by running multiple wake words in parallel, one for each person. But that’s a very resource intensive workaround/hack.
 
-## Hardware setup
+## Hardware setups
+Some possible hardware setups are being listed here, to get you started.  Each setup will have both advantages and disadvantages...
 
-TODO: show some setups, like e.g. live streaming from a Zero to a central RPI with wake word detection.  
+### Raspberry Zero for voice capture
+
+When a series of microphones need to be installed in a building, it might become too expensive to use Raspberry Pi (3 or 4) devices.  In those cases one might consider to use Raspberry Pi Zero devices to reduce the cost.  However a single core Raspberry Pi zero is not powerful enough to run wake-word detection.  As a result the Zero will run a Node-RED flow that captures audio from its microphone, and then it will need to send that audio (as a continious stream) to a Raspberry Pi (3 or 4).  That central Raspberry Pi will need to run a Node-RED flow, that needs to do all the Voice2Json processing:
+
+![Zero setup](https://user-images.githubusercontent.com/14224149/84948181-a4635d80-b0eb-11ea-9fa5-52cbc97c567a.png)
+
+
