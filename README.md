@@ -44,7 +44,7 @@ This suite contains 5 Node-RED nodes:
 * wait wake & record command:
     * a stream of raw audio buffers
 * stt:
-    * a single wav as a buffer object
+    * a single wav as a buffer object or a path to a valid wav file
 * Little Endian
 * signed-integer
 * 1 channel mono
