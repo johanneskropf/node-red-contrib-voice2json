@@ -11,10 +11,14 @@ Run the following npm command in your Node-RED user directory (typically ~/.node
 ```
 npm install johanneskropf/node-red-contrib-voice2json
 ```
-Install voice2json on the same machine as nodered. Detailed instructions can be found in the [voice2json documentation](http://voice2json.org/install.html).
 
-If you want to use node-red-contrib-voice2json with a docker install you have to adapt the supplied bash script to include the line `-v “/dev/shm/:/dev/shm/“ \`.
-So it will be:
+### Voice2Json installation
+Install voice2json on the same machine as nodered. Detailed instructions can be found in the [voice2json documentation](http://voice2json.org/install.html), two install Voice2Json in one of the following ways:
+
+1. As a (pre-compiled) Debian package.
+2. As a Docker container.
+
+If you want to use node-red-contrib-voice2json with a docker install you have to adapt the supplied bash script (from the Voice2Json documentation) to include the line `-v “/dev/shm/:/dev/shm/“ \`.  This means the entire script will look like this:
 ```
 #!/usr/bin/env bash
 docker run -i \
@@ -25,8 +29,12 @@ docker run -i \
        --user "$(id -u):$(id -g)" \
        synesthesiam/voice2json:2.0.0 "$@"
 ```
+More information about this can be found below in the section *"Notes on minimizing SD card wear in voice2jsons file based workflow"*.
 
-When using the nodes with the docker container installation you have to download any profile you want to use to a path somewhere in your home directory as otherwise the container will not be able to access it. Another option would be to include the path to your container as an additional `-v` argument in the voice2json docker run bash script.
+### Language profile installation
+To be able to start voice recognition, a language profile needs to be installed.  Download the profile of your preferred language, from the [list](http://voice2json.org/#supported-languages) of supported languages.  The directory - where the language profile is stored - needs to be entered in the config node screen (see further).
+
+Remark: When using the Voice2Json Docker container, make sure the language profile is stored somewhere in your home directory.  Otherwise Voice2Json will not be able to access it from its Docker container.  If that is not possible, you will need to make the path accessible for the Docker container, by adding an additional `-v` argument in the above Voice2Json Docker run bash script.
 
 ## Voice2json introduction
 
