@@ -42,9 +42,13 @@ The [voice2json](http://voice2json.org/) project offers a collection of command 
 
 ## Node Usage
 
-This suite contains 5 Node-RED nodes:
+This suite offers 5 Node-RED nodes in the Node-RED palette, located in the *"Voice2Json"* section:
 
-![image](https://user-images.githubusercontent.com/14224149/80300314-cd2a3f00-879b-11ea-9a55-b74bfabd1015.png)
+![Palette](https://user-images.githubusercontent.com/14224149/84939047-04530780-b0de-11ea-9c6c-f2621406ff95.png)
+
+Note that all the example flows from this page can easily be installed via the Node-RED *"Import"* menu:
+
+![Import menu](https://user-images.githubusercontent.com/14224149/84938505-a7efe800-b0dd-11ea-8926-c0df710b872a.png)
 
 ### *A note on audio formats*
 
@@ -206,7 +210,7 @@ The speech to text node can be used to recognize sentences (which are specified 
 ```
 
 1. The STT node needs to be started.  There are 3 different ways to accomplish this:
-   + This node has an auto-start at deployment mode, that can be enabled by activating the *"auto start transcriber"* checkbox on the config screen.  The advantage is that this node will be started immediately, which means it will be ready as soon as the first input voice message arrives.
+   + This node offers auto-start (at deployment time), that can be enabled by activating the *"auto start transcriber"* checkbox on the config screen.  The advantage is that this node will be started immediately (after a deploy or startup), which means it will be ready as soon as the first input voice message arrives.
    + This node can be started explict, by injecting an input message with `msg.payload="start"` (and stopped via `msg.payload="stop"`).  This will be used mostly to restart this node after a new training has been executed. 
    + This node will be autostarted automatically when an input voice message arrives, when this node is not started yet.  When relying solely on this mode, the first input voice message will take a while to process (since voice2json still needs to load all its resources).
    Therefore it is advised to use one of the first two modes, since voice2json can load its resources before audio arrives (which greatly reduces the time of the first transcription).  And the combination with the last mode will ensure fail safety: if the voice2json process would be halted for some reason, this node will automatically restart the process when the next input voice message arrives.  Which might be usefull in a 24/7 setup.
