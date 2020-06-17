@@ -190,25 +190,33 @@ This nodes input can be directly connected to the second output of the wait wake
 
 ### Speech To Text node
 
+The speech to text node can be used to recognize sentences (which are specified in the selected config node).
+
 ![STT flow](https://user-images.githubusercontent.com/14224149/84831754-31df7880-b02c-11ea-80b2-099a341172a1.png)
 ```
 [{"id":"c23b841b.40e068","type":"voice2json-stt","z":"11289790.c89848","name":"","voice2JsonConfig":"3cf7b405.ee3c5c","inputType":"msg","inputField":"payload","outputField":"payload","autoStart":true,"x":880,"y":160,"wires":[["faef3d3a.f726d"]]},{"id":"faef3d3a.f726d","type":"debug","z":"11289790.c89848","name":"Show text","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","targetType":"msg","x":1060,"y":160,"wires":[]},{"id":"4402e1cd.bc321","type":"http request","z":"11289790.c89848","name":"","method":"GET","ret":"bin","paytoqs":false,"url":"https://www.pacdv.com/sounds/voices/open-the-goddamn-door.wav","tls":"","persist":false,"proxy":"","authType":"","x":670,"y":160,"wires":[["c23b841b.40e068"]]},{"id":"dd141eca.7d435","type":"inject","z":"11289790.c89848","name":"Execute STT","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":470,"y":160,"wires":[["4402e1cd.bc321"]]},{"id":"32556859.85b628","type":"inject","z":"11289790.c89848","name":"Start","topic":"","payload":"start","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":690,"y":40,"wires":[["c23b841b.40e068"]]},{"id":"29e1ad9f.a53e32","type":"inject","z":"11289790.c89848","name":"Stop","topic":"","payload":"stop","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":690,"y":80,"wires":[["c23b841b.40e068"]]},{"id":"3cf7b405.ee3c5c","type":"voice2json-config","z":"","profilePath":"/home/pi/voice2json_profile/en-us_kaldi-zamia-2.0","name":"Kaldi english profile","sentences":"[GetTime]\nwhat time is it\ntell me the time\n\n[GetTemperature]\nwhats the temperature\nhow (hot | cold) is it\n\n[GetGarageState]\nis the garage door (open | closed)\n\n[ChangeLightState]\nlight_name = ((living room lamp | garage light) {name}) | <ChangeLightColor.light_name>\nlight_state = (on | off) {state}\n\nturn <light_state> [the] <light_name>\nturn [the] <light_name> <light_state>\n\n[ChangeLightColor]\nlight_name = (bedroom light) {name}\ncolor = (red | green | blue) {color}\n\nset [the] <light_name> [to] <color>\nmake [the] <light_name> <color>","slots":[{"fileName":"slot1","managedBy":"external","fileContent":null,"executable":false},{"fileName":"fold_a/fold_b/fold_c/testslot","managedBy":"external","fileContent":null,"executable":false},{"fileName":"rhasspy/number","managedBy":"external","fileContent":null,"executable":true}],"removeSlots":true}]
 ```
 
-1. The STT node has different modes of startup. It has an auto-start at deployment mode that can be enabled by activating the *"auto start transcriber"* checkbox on the config screen, by injecting an input message with `msg.payload="start"` (and stopped via `msg.payload="stop"`) or by sending a valid payload containing a buffer with wav data or a path to a wav audio file.
-The first two modes of starting before passing data to the node have the advantage that voice2json can load its resources before audio arrives which greatly reduces the time of the first transcription.
+1. The STT node needs to be started.  There are 3 different ways to accomplish this:
+   + This node has an auto-start at deployment mode, that can be enabled by activating the *"auto start transcriber"* checkbox on the config screen.  The advantage is that this node will be started immediately, which means it will be ready as soon as the first input voice message arrives.
+   + This node can be started explict, by injecting an input message with `msg.payload="start"` (and stopped via `msg.payload="stop"`).  This will be used mostly to restart this node after a new training has been executed. 
+   + This node will be autostarted automatically when an input voice message arrives, when this node is not started yet.  When relying solely on this mode, the first input voice message will take a while to process (since voice2json still needs to load all its resources).
+   Therefore it is advised to use one of the first two modes, since voice2json can load its resources before audio arrives (which greatly reduces the time of the first transcription).  And the combination with the last mode will ensure fail safety: if the voice2json process would be halted for some reason, this node will automatically restart the process when the next input voice message arrives.  Which might be usefull in a 24/7 setup.
+   
 2. Once started, start injecting input data containing a WAV audio buffer or the path to a WAV file via `msg.payload`.
+
 3. The STT node will try to recognize the sentences, which have been specified in the sentences tab of the config node (*you need to retrain if you change your slots or sentences and restart the stt node for the stt node to pick those changes*).
+
 4. The output message will be an object in the configured `msg.property`. The property **text** of this object contains the recognized text as a string. Here is an example output object:
-```
-{
-   "text":"großeswohnzimmerlicht",
-   "likelihood":1,
-   "transcribe_seconds":0.9190294530708343,
-   "wav_seconds":1.65,"tokens":null,
-   "wav_name":"stt6c07d69a121de8.wav"
-}
-```
+   ```
+   {
+      "text":"großeswohnzimmerlicht",
+      "likelihood":1,
+      "transcribe_seconds":0.9190294530708343,
+      "wav_seconds":1.65,"tokens":null,
+      "wav_name":"stt6c07d69a121de8.wav"
+   }
+   ```
 
 ### Text To Intent node
 
