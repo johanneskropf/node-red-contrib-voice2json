@@ -38,7 +38,7 @@ This suite contains 5 Node-RED nodes:
 
 ![image](https://user-images.githubusercontent.com/14224149/80300314-cd2a3f00-879b-11ea-9a55-b74bfabd1015.png)
 
-### A note on audio formats
+### *A note on audio formats*
 
 ***The nodes in this suite expect a certain audio format. The format is:***
 * wait wake & record command:
