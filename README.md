@@ -206,7 +206,7 @@ The speech to text node can be used to recognize sentences (which are specified 
 
 ![STT flow](https://user-images.githubusercontent.com/14224149/84831754-31df7880-b02c-11ea-80b2-099a341172a1.png)
 ```
-[{"id":"c23b841b.40e068","type":"voice2json-stt","z":"11289790.c89848","name":"","voice2JsonConfig":"3cf7b405.ee3c5c","inputType":"msg","inputField":"payload","outputField":"payload","autoStart":true,"x":880,"y":160,"wires":[["faef3d3a.f726d"]]},{"id":"faef3d3a.f726d","type":"debug","z":"11289790.c89848","name":"Show text","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","targetType":"msg","x":1060,"y":160,"wires":[]},{"id":"4402e1cd.bc321","type":"http request","z":"11289790.c89848","name":"","method":"GET","ret":"bin","paytoqs":false,"url":"https://www.pacdv.com/sounds/voices/open-the-goddamn-door.wav","tls":"","persist":false,"proxy":"","authType":"","x":670,"y":160,"wires":[["c23b841b.40e068"]]},{"id":"dd141eca.7d435","type":"inject","z":"11289790.c89848","name":"Execute STT","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":470,"y":160,"wires":[["4402e1cd.bc321"]]},{"id":"32556859.85b628","type":"inject","z":"11289790.c89848","name":"Start","topic":"","payload":"start","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":690,"y":40,"wires":[["c23b841b.40e068"]]},{"id":"29e1ad9f.a53e32","type":"inject","z":"11289790.c89848","name":"Stop","topic":"","payload":"stop","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":690,"y":80,"wires":[["c23b841b.40e068"]]},{"id":"3cf7b405.ee3c5c","type":"voice2json-config","z":"","profilePath":"/home/pi/voice2json_profile/en-us_kaldi-zamia-2.0","name":"Kaldi english profile","sentences":"[GetTime]\nwhat time is it\ntell me the time\n\n[GetTemperature]\nwhats the temperature\nhow (hot | cold) is it\n\n[GetGarageState]\nis the garage door (open | closed)\n\n[ChangeLightState]\nlight_name = ((living room lamp | garage light) {name}) | <ChangeLightColor.light_name>\nlight_state = (on | off) {state}\n\nturn <light_state> [the] <light_name>\nturn [the] <light_name> <light_state>\n\n[ChangeLightColor]\nlight_name = (bedroom light) {name}\ncolor = (red | green | blue) {color}\n\nset [the] <light_name> [to] <color>\nmake [the] <light_name> <color>","slots":[{"fileName":"slot1","managedBy":"external","fileContent":null,"executable":false},{"fileName":"fold_a/fold_b/fold_c/testslot","managedBy":"external","fileContent":null,"executable":false},{"fileName":"rhasspy/number","managedBy":"external","fileContent":null,"executable":true}],"removeSlots":true}]
+[{"id":"a130ba16.223568","type":"voice2json-stt","z":"11289790.c89848","name":"","voice2JsonConfig":"3cf7b405.ee3c5c","inputType":"msg","inputField":"payload","outputField":"payload","autoStart":true,"x":660,"y":380,"wires":[["b1517366.97b42"]]},{"id":"b1517366.97b42","type":"debug","z":"11289790.c89848","name":"Text","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":850,"y":380,"wires":[]},{"id":"9bb2c518.0a5628","type":"http request","z":"11289790.c89848","name":"","method":"GET","ret":"bin","paytoqs":false,"url":"https://raw.githubusercontent.com/johanneskropf/node-red-contrib-voice2json/master/wav/turn_on_lights_kitchen.wav","tls":"","persist":false,"proxy":"","authType":"","x":450,"y":380,"wires":[["a130ba16.223568"]]},{"id":"6940b487.dcee8c","type":"inject","z":"11289790.c89848","name":"Execute STT","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":250,"y":380,"wires":[["9bb2c518.0a5628"]]},{"id":"697e631.4c9599c","type":"inject","z":"11289790.c89848","name":"Start","topic":"","payload":"start","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":450,"y":280,"wires":[["a130ba16.223568"]]},{"id":"fd112978.dcb108","type":"inject","z":"11289790.c89848","name":"Stop","topic":"","payload":"stop","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":450,"y":320,"wires":[["a130ba16.223568"]]},{"id":"3cf7b405.ee3c5c","type":"voice2json-config","z":"","profilePath":"/home/pi/voice2json_profile/en-us_kaldi-zamia-2.0","name":"Kaldi english profile","sentences":"[TurnLigths]\r\nturn (on | off){state} the light in the (kitchen | bathroom){room}","slots":[],"removeSlots":true}]
 ```
 
 1. The STT node needs to be started.  There are 3 different ways to accomplish this:
@@ -217,25 +217,99 @@ The speech to text node can be used to recognize sentences (which are specified 
    
 2. Once started, start injecting input data containing a WAV audio buffer or the path to a WAV file via `msg.payload`.
 
-3. The STT node will try to recognize the sentences, which have been specified in the sentences tab of the config node (*you need to retrain if you change your slots or sentences and restart the stt node for the stt node to pick those changes*).
+3. The STT node will try to recognize the sentences, which have been specified in the sentences tab of the config node (*you need to retrain if you change your slots or sentences and restart the stt node for the stt node to pick those changes*):
+   ```
+   [TurnLigths]
+   turn (on | off){state} the light in the (kitchen | bathroom){room}
+   ```
 
 4. The output message will be an object in the configured `msg.property`. The property **text** of this object contains the recognized text as a string. Here is an example output object:
    ```
    {
-      "text":"großeswohnzimmerlicht",
+      "text": "turn on the light in the kitchen",
       "likelihood":1,
-      "transcribe_seconds":0.9190294530708343,
-      "wav_seconds":1.65,"tokens":null,
-      "wav_name":"stt6c07d69a121de8.wav"
+      "transcribe_seconds":3.4162743357010186,
+      "wav_seconds":2.035,
+      "tokens":null,
+      "wav_name":"stta130ba16223568.wav"
    }
    ```
+   As you can see the `text` property contains the text from the [wav](https://raw.githubusercontent.com/johanneskropf/node-red-contrib-voice2json/master/wav/turn_on_lights_kitchen.wav) audio file.
 
 ### Text To Intent node
+Intent analysis involves searching information (rooms, switch statuses, names, ...) in a text, as a part of natural language understanding.
+
+In the previous example flow, the STT node converted the wav file to a text sentence.  Now we will send this text to the TTI node, which will extract the required information from that text.
 
 ![TTI flow](https://user-images.githubusercontent.com/14224149/84950157-ba265200-b0ee-11ea-9503-1d27fe4db88a.png)
 ```
-[{"id":"c23b841b.40e068","type":"voice2json-stt","z":"11289790.c89848","name":"","voice2JsonConfig":"3cf7b405.ee3c5c","inputType":"msg","inputField":"payload","outputField":"payload","autoStart":true,"x":660,"y":260,"wires":[["88000e6b.23f55"]]},{"id":"faef3d3a.f726d","type":"debug","z":"11289790.c89848","name":"Intent","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":1050,"y":260,"wires":[]},{"id":"4402e1cd.bc321","type":"http request","z":"11289790.c89848","name":"","method":"GET","ret":"bin","paytoqs":false,"url":"https://www.pacdv.com/sounds/voices/open-the-goddamn-door.wav","tls":"","persist":false,"proxy":"","authType":"","x":450,"y":260,"wires":[["c23b841b.40e068"]]},{"id":"dd141eca.7d435","type":"inject","z":"11289790.c89848","name":"Execute STT","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":250,"y":260,"wires":[["4402e1cd.bc321"]]},{"id":"88000e6b.23f55","type":"voice2json-tti","z":"11289790.c89848","name":"","voice2JsonConfig":"3cf7b405.ee3c5c","inputField":"payload.text","outputField":"payload","autoStart":false,"x":880,"y":260,"wires":[["faef3d3a.f726d"]]},{"id":"13b82eb1.b72bf1","type":"inject","z":"11289790.c89848","name":"Stop","topic":"","payload":"stop","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":450,"y":200,"wires":[["8cebce39.0bc7c"]]},{"id":"6fdd8681.afc558","type":"inject","z":"11289790.c89848","name":"Start","topic":"","payload":"start","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":450,"y":160,"wires":[["8cebce39.0bc7c"]]},{"id":"8cebce39.0bc7c","type":"change","z":"11289790.c89848","name":"","rules":[{"t":"move","p":"payload","pt":"msg","to":"payload.text","tot":"msg"}],"action":"","property":"","from":"","to":"","reg":false,"x":650,"y":200,"wires":[["88000e6b.23f55"]]},{"id":"3cf7b405.ee3c5c","type":"voice2json-config","z":"","profilePath":"/home/pi/voice2json_profile/en-us_kaldi-zamia-2.0","name":"Kaldi english profile","sentences":"[GetTime]\nwhat time is it\ntell me the time\n\n[GetTemperature]\nwhats the temperature\nhow (hot | cold) is it\n\n[GetGarageState]\nis the garage door (open | closed)\n\n[ChangeLightState]\nlight_name = ((living room lamp | garage light) {name}) | <ChangeLightColor.light_name>\nlight_state = (on | off) {state}\n\nturn <light_state> [the] <light_name>\nturn [the] <light_name> <light_state>\n\n[ChangeLightColor]\nlight_name = (bedroom light) {name}\ncolor = (red | green | blue) {color}\n\nset [the] <light_name> [to] <color>\nmake [the] <light_name> <color>","slots":[{"fileName":"slot1","managedBy":"external","fileContent":null,"executable":false},{"fileName":"fold_a/fold_b/fold_c/testslot","managedBy":"external","fileContent":null,"executable":false},{"fileName":"rhasspy/number","managedBy":"external","fileContent":null,"executable":true}],"removeSlots":true}]
+[{"id":"c23b841b.40e068","type":"voice2json-stt","z":"11289790.c89848","name":"","voice2JsonConfig":"3cf7b405.ee3c5c","inputType":"msg","inputField":"payload","outputField":"payload","autoStart":true,"x":660,"y":460,"wires":[["88000e6b.23f55"]]},{"id":"faef3d3a.f726d","type":"debug","z":"11289790.c89848","name":"Intent","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":1050,"y":460,"wires":[]},{"id":"4402e1cd.bc321","type":"http request","z":"11289790.c89848","name":"","method":"GET","ret":"bin","paytoqs":false,"url":"https://www.pacdv.com/sounds/voices/open-the-goddamn-door.wav","tls":"","persist":false,"proxy":"","authType":"","x":450,"y":460,"wires":[["c23b841b.40e068"]]},{"id":"dd141eca.7d435","type":"inject","z":"11289790.c89848","name":"Execute STT","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":250,"y":460,"wires":[["4402e1cd.bc321"]]},{"id":"88000e6b.23f55","type":"voice2json-tti","z":"11289790.c89848","name":"","voice2JsonConfig":"3cf7b405.ee3c5c","inputField":"payload.text","outputField":"payload","autoStart":true,"x":880,"y":460,"wires":[["faef3d3a.f726d"]]},{"id":"8cebce39.0bc7c","type":"change","z":"11289790.c89848","name":"","rules":[{"t":"move","p":"payload","pt":"msg","to":"payload.text","tot":"msg"}],"action":"","property":"","from":"","to":"","reg":false,"x":650,"y":400,"wires":[["88000e6b.23f55"]]},{"id":"6fdd8681.afc558","type":"inject","z":"11289790.c89848","name":"Start","topic":"","payload":"start","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":450,"y":360,"wires":[["8cebce39.0bc7c"]]},{"id":"13b82eb1.b72bf1","type":"inject","z":"11289790.c89848","name":"Stop","topic":"","payload":"stop","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":450,"y":400,"wires":[["8cebce39.0bc7c"]]},{"id":"3cf7b405.ee3c5c","type":"voice2json-config","z":"","profilePath":"/home/pi/voice2json_profile/en-us_kaldi-zamia-2.0","name":"Kaldi english profile","sentences":"[TurnLigths]\r\nturn (on | off){state} the light in the (kitchen | bathroom){room}","slots":[],"removeSlots":true}]
 ```
+1. The sentences in the config node contain all the information that we want to extract from the text:
+   ```
+   [TurnLigths]
+   turn (on | off){state} the light in the (kitchen | bathroom){room}
+   ```
+   
+2. This way the TTI node knows that it needs to determine the light 'state' (which can be on or off) and the room (which can be kitchen or bathroom).
+
+3. The output will contain the information about both variables:
+   ```
+   {
+      "text":"turn on the light in the kitchen",
+      "intent":{
+         "name":"TurnLigths",
+         "confidence":1
+      },
+      "entities":[{
+         "entity":"state",
+         "value":"on",
+         "raw_value":"on",
+         "source":"",
+         "start":5,
+         "raw_start":5,
+         "end":7,
+         "raw_end":7,
+         "tokens":["on"],
+         "raw_tokens":[
+            "on"
+         ]
+      },
+      {
+         "entity":"room",
+         "value":"kitchen",
+         "raw_value":"kitchen",
+         "source":"",
+         "start":25,
+         "raw_start":25,
+         "end":32,
+         "raw_end":32,
+         "tokens":[
+            "kitchen"
+         ],
+         "raw_tokens":[
+            "kitchen"
+         ]
+      }],
+      "raw_text":"turn on the light in the kitchen",
+      "recognize_seconds":0.0011993711814284325,
+      "tokens":[
+         ...
+      ],
+      "raw_tokens"[
+         ...
+      ],
+      "wav_seconds":null,
+      "transcribe_seconds":null,
+      "speech_confidence":null,
+      "wav_name":null,
+      "slots":{
+         "state":"on",
+         "room":"kitchen"
+      }
+   }
+   ```
+   Based on the `confidence` field, it is possible to determine whether you want to accept the value or reject it...
 
 ### *Notes on some principles in how the transcription / intent recognition works in voice2json*
 
