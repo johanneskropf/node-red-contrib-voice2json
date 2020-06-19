@@ -66,7 +66,7 @@
             
         }
         
-        function spawnTranscribe(msg){
+        function spawnTranscribe(){
             try{
                 node.transcribeWav = spawn("voice2json",["--profile",node.profilePath,"transcribe-wav","--stdin-file"],{detached:true});
             } 
@@ -76,6 +76,7 @@
                 return;
             }
             
+            node.warn("started");
             node_status(["running","blue","ring"]);
             
             node.transcribeWav.stderr.on('data', (data)=>{
@@ -116,7 +117,7 @@
                 
                 try {
                     // Set the converted value in the specified message field (of the original input message)
-                    RED.util.setMessageProperty(msg, node.outputField, node.outputValue, true);
+                    RED.util.setMessageProperty(node.msgObj, node.outputField, node.outputValue, true);
                 } catch(err) {
                     node.error("Error setting value in msg." + node.outputField + " : " + err.message);
                     if(node.transcribeWav){
@@ -127,7 +128,7 @@
                     return;
                 }
             
-                node.send(msg);
+                node.send(node.msgObj);
                 if(node.transcribeWav){
                     node_status(["success","green","dot"],1500,["running","blue","ring"]);
                 } else {
@@ -139,7 +140,7 @@
             
         }
         
-        function saveBufferWrite(msg){
+        function saveBufferWrite(){
             
             node_status(["processing...","blue","dot"]);
             
@@ -178,13 +179,13 @@
             return;
         }
          
-        function writeStdin(msg){
+        function writeStdin(){
             
             node_status(["processing...","blue","dot"]);
             
             try {
                 // Get the file path from the specified message field
-                node.filePath = RED.util.getMessageProperty(msg, node.inputField);
+                node.filePath = node.inputMsg;
             } 
             catch(err) {
                 node.error("Error getting file path from msg." + node.inputField + " : " + err.message);
@@ -256,7 +257,7 @@
         if(node.autoStart){
             setTimeout(()=>{
                 node.warn("starting");
-                spawnTranscribe(node.msgObj);
+                spawnTranscribe();
                 return;
             }, 1500);
         }
@@ -276,12 +277,12 @@
                         node.transcribeWav.kill();
                         delete node.transcribeWav;
                         setTimeout(()=>{
-                            spawnTranscribe(node.msgObj);
+                            spawnTranscribe();
                             return;
                         }, 1500);
                     } else {
                         node.warn("starting");
-                        spawnTranscribe(node.msgObj);
+                        spawnTranscribe();
                     }
                     return;
                     
@@ -304,20 +305,20 @@
                         node.warn(warnmsg);
                     } else if(!node.transcribeWav){
                         node.warn("not started, starting now!");
-                        spawnTranscribe(node.msgObj);
+                        spawnTranscribe();
                         setTimeout(()=>{
                             if(typeof node.inputMsg == "string"){
-                                writeStdin(node.msgObj);
+                                writeStdin();
                             } else if(Buffer.isBuffer(node.inputMsg)){
-                                saveBufferWrite(node.msgObj);
+                                saveBufferWrite();
                             }
                             return;
                         }, 1000);
                     } else {
                         if(typeof node.inputMsg == "string"){
-                            writeStdin(node.msgObj);
+                            writeStdin();
                         } else if(Buffer.isBuffer(node.inputMsg)){
-                            saveBufferWrite(node.msgObj);
+                            saveBufferWrite();
                         }
                     }
                     return;

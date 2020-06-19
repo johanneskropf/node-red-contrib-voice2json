@@ -62,7 +62,7 @@
             
         }
         
-        function spawnRecognize(msg){
+        function spawnRecognize(){
             try{
                 node.recognizeIntent = spawn("voice2json",["--profile",node.profilePath,"recognize-intent","--text-input"],{detached:true});
             } 
@@ -72,6 +72,7 @@
                 return;
             }
             
+            node.warn("started");
             node_status(["running","blue","ring"]);
             
             node.recognizeIntent.stderr.on('data', (data)=>{
@@ -112,7 +113,7 @@
                 
                 try {
                     // Set the converted value in the specified message field (of the original input message)
-                    RED.util.setMessageProperty(msg, node.outputField, node.outputValue, true);
+                    RED.util.setMessageProperty(node.msgObj, node.outputField, node.outputValue, true);
                 } catch(err) {
                     node.error("Error setting value in msg." + node.outputField + " : " + err.message);
                     if(node.recognizeIntent){
@@ -123,7 +124,7 @@
                     return;
                 }
             
-                node.send(msg);
+                node.send(node.msgObj);
                 if(node.recognizeIntent){
                     node_status(["success","green","dot"],1500,["running","blue","ring"]);
                 } else {
@@ -135,13 +136,13 @@
             
         }
         
-        function writeStdin(msg){
+        function writeStdin(){
             
             node_status(["processing...","blue","dot"]);
            
             try {
                 // Get the text to analyze from input
-                node.inputText = RED.util.getMessageProperty(msg, node.inputField);
+                node.inputText = node.inputMsg;
             } 
             catch(err) {
                 node.error("Error getting text from msg." + node.inputField + " : " + err.message);
@@ -199,7 +200,7 @@
         if(node.autoStart){
             setTimeout(()=>{
                 node.warn("starting");
-                spawnRecognize(node.msgObj);
+                spawnRecognize();
                 return;
             }, 1500);
         }
@@ -219,12 +220,12 @@
                         node.recognizeIntent.kill();
                         delete node.recognizeIntent;
                         setTimeout(()=>{
-                            spawnRecognize(node.msgObj);
+                            spawnRecognize();
                             return;
                         }, 1500);
                     } else {
                         node.warn("starting");
-                        spawnRecognize(node.msgObj);
+                        spawnRecognize();
                     }
                     return;
                     
@@ -245,13 +246,13 @@
                         node.warn(warnmsg);
                     } else if(!node.recognizeIntent){
                         node.warn("not started, starting now!");
-                        spawnRecognize(node.msgObj);
+                        spawnRecognize();
                         setTimeout(()=>{
-                            writeStdin(node.msgObj);
+                            writeStdin();
                             return;
                         }, 1000);
                     } else {
-                        writeStdin(node.msgObj);
+                        writeStdin();
                     }
                     return;
                     

@@ -88,6 +88,7 @@
                 return;
             }
             
+            node.warn("started");
             node_status(["listening to stream","blue","dot"]);
             
             node.waitWake.stderr.on('data', (data)=>{
