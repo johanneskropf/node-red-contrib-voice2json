@@ -18,8 +18,9 @@
             name: {value:""},
             voice2JsonConfig: {value:"", type: "voice2json-config"},
             inputField: {value:"payload", required:true},
+            controlField: {value:"control", required:true},
             outputField: {value:"payload", required:true},
-			nonContinousListen: {value:false, required:true}
+            nonContinousListen: {value:false, required:true}
         },          
         inputs:1,
         outputs:2,
@@ -28,27 +29,44 @@
             return this.name || "Voice2Json Wakeword";
         },
         oneditprepare: function() {
+            
             var node = this;
+            
             // Show the filePath value in a typedinput element (dropdown with only 'str')
             var inputValue = $("#node-input-inputField").val() || '';
             $("#node-input-typed-inputField").typedInput({types:['msg']});
             $("#node-input-typed-inputField").typedInput('type',node.inputType);
             $("#node-input-typed-inputField").typedInput('value',inputValue);
             
+            // Show the configField value in a typedinput element (dropdown with only 'msg')
+            var controlValue = $("#node-input-controlField").val() || '';
+            $("#node-input-typed-controlField").typedInput({types:['msg']});
+            $("#node-input-typed-controlField").typedInput('type','msg');
+            $("#node-input-typed-controlField").typedInput('value',controlValue);
+            
             // Show the outputField value in a typedinput element (dropdown with only 'msg')
             var outputValue = $("#node-input-outputField").val() || '';
             $("#node-input-typed-outputField").typedInput({types:['msg']});
             $("#node-input-typed-outputField").typedInput('type','msg');
             $("#node-input-typed-outputField").typedInput('value',outputValue); 
+            
         },
         oneditsave: function() {
+            
             var node = this;
+            
             // Copy the filePath value from the typedinput element to the filePath element
             var filePath = $("#node-input-typed-filePath").typedInput('value');
             $("#node-input-filePath").val(filePath);
+            
+            // Copy the controlField value from the typedinput element to the inputField element
+            var controlValue = $("#node-input-typed-controlField").typedInput('value');
+            $("#node-input-controlField").val(controlValue);
+            
             // Copy the outputField value from the typedinput element to the outputField element
             var outputValue = $("#node-input-typed-outputField").typedInput('value');
             $("#node-input-outputField").val(outputValue);
+            
         }
     });
 </script>
@@ -63,6 +81,11 @@
         <label for="node-input-typed-inputField"><i class="fa fa-sign-in"></i> Input field</label>
         <input id="node-input-typed-inputField" type="text" style="width: 70%">
         <input id="node-input-inputField" type="hidden">
+    </div>
+    <div class="form-row">
+        <label for="node-input-typed-controlField"><i class="fa fa-cogs"></i> Control field</label>
+        <input id="node-input-typed-controlField" type="text" style="width: 70%">
+        <input id="node-input-controlField" type="hidden">
     </div>  
     <div class="form-row">
         <label for="node-input-typed-outputField"><i class="fa fa-sign-out"></i> Output field</label>

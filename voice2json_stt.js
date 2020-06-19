@@ -23,7 +23,7 @@
     function Voice2JsonSpeechToTextNode(config) {
         RED.nodes.createNode(this, config);
         this.inputField  = config.inputField;
-        this.inputType = config.inputType;
+        this.controlField = config.controlField;
         this.outputField = config.outputField;
         this.profilePath = "";
         this.filePath = "";
@@ -182,33 +182,28 @@
             
             node_status(["processing...","blue","dot"]);
             
-            if (node.inputType === "msg") {
-                try {
-                    // Get the file path from the specified message field
-                    node.filePath = RED.util.getMessageProperty(msg, node.inputField);
-                } 
-                catch(err) {
-                    node.error("Error getting file path from msg." + node.inputField + " : " + err.message);
-                    if(node.transcribeWav){
-                        node_status(["file path error","red","dot"],1500,["running","blue","ring"]);
-                    } else {
-                        node_status(["file path error","red","dot"]);
-                    }
-                    return;
+            try {
+                // Get the file path from the specified message field
+                node.filePath = RED.util.getMessageProperty(msg, node.inputField);
+            } 
+            catch(err) {
+                node.error("Error getting file path from msg." + node.inputField + " : " + err.message);
+                if(node.transcribeWav){
+                    node_status(["file path error","red","dot"],1500,["running","blue","ring"]);
+                } else {
+                    node_status(["file path error","red","dot"]);
                 }
-                
-                if (!node.filePath || node.filePath === "" || typeof node.filePath !== 'string') {
-                    node.error("The msg." + node.inputField + " should contain a file path");
-                    if(node.transcribeWav){
-                        node_status(["file path error","red","dot"],1500,["running","blue","ring"]);
-                    } else {
-                        node_status(["file path error","red","dot"]);
-                    }
-                    return;
-                }
+                return;
             }
-            else { // str
-                node.filePath = node.inputField;
+                
+            if (!node.filePath || node.filePath === "" || typeof node.filePath !== 'string') {
+                node.error("The msg." + node.inputField + " should contain a file path");
+                if(node.transcribeWav){
+                    node_status(["file path error","red","dot"],1500,["running","blue","ring"]);
+                } else {
+                    node_status(["file path error","red","dot"]);
+                }
+                return;
             }
 
             if (!fs.existsSync(node.filePath)){
@@ -259,8 +254,8 @@
         if (!fs.existsSync('/dev/shm')) { node.shm = false; }
         
         if(node.autoStart){
-            node.warn("starting");
             setTimeout(()=>{
+                node.warn("starting");
                 spawnTranscribe(node.msgObj);
                 return;
             }, 1500);
@@ -268,8 +263,10 @@
 
         node.on("input", function(msg) {
             
-            node.inputMsg = RED.util.getMessageProperty(msg, node.inputField);
+            node.inputMsg = (node.controlField in msg) ? RED.util.getMessageProperty(msg, node.controlField) : RED.util.getMessageProperty(msg, node.inputField);
+            
             node.msgObj = msg;
+            
             switch (node.inputMsg){
             
                 case "start":

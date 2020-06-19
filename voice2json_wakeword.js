@@ -21,6 +21,7 @@
     function Voice2JsonWakewordNode(config) {
         RED.nodes.createNode(this, config);
         this.inputField  = config.inputField;
+        this.controlField = config.controlField;
         this.outputField = config.outputField;
 		this.nonContinousListen = config.nonContinousListen;
         this.profilePath = "";
@@ -169,7 +170,9 @@
         }
         
         initialTimeoutFunction();
+        
         node_status(["waiting for audio","grey","ring"]);
+        
         // Retrieve the config node
         node.voice2JsonConfig = RED.nodes.getNode(config.voice2JsonConfig);
         
@@ -189,7 +192,7 @@
             
             if (node.initialTimeout) { return; }
             
-            node.inputMsg = RED.util.getMessageProperty(msg, node.inputField);
+            node.inputMsg = (node.controlField in msg) ? RED.util.getMessageProperty(msg, node.controlField) : RED.util.getMessageProperty(msg, node.inputField);
             
             switch (node.inputMsg){
             

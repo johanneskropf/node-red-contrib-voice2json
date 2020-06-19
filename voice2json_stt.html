@@ -17,8 +17,8 @@
         defaults: {
             name: {value:""},
             voice2JsonConfig: {value:"", type: "voice2json-config"},
-            inputType: { value:"msg" },
             inputField: {value:"payload", required:true},
+            controlField: {value:"control", required:true},
             outputField: {value:"payload", required:true},
             autoStart: {value:false}
         },          
@@ -37,6 +37,12 @@
             $("#node-input-typed-inputField").typedInput('type',node.inputType);
             $("#node-input-typed-inputField").typedInput('value',inputValue);
             
+            // Show the configField value in a typedinput element (dropdown with only 'msg')
+            var controlValue = $("#node-input-controlField").val() || '';
+            $("#node-input-typed-controlField").typedInput({types:['msg']});
+            $("#node-input-typed-controlField").typedInput('type','msg');
+            $("#node-input-typed-controlField").typedInput('value',controlValue);
+            
             // Show the outputField value in a typedinput element (dropdown with only 'msg')
             var outputValue = $("#node-input-outputField").val() || '';
             $("#node-input-typed-outputField").typedInput({types:['msg']});
@@ -50,8 +56,9 @@
             var inputValue = $("#node-input-typed-inputField").typedInput('value');
             $("#node-input-inputField").val(inputValue);
             
-            // Store also the input type
-            node.inputType = $("#node-input-typed-inputField").typedInput('type');
+            // Copy the controlField value from the typedinput element to the inputField element
+            var controlValue = $("#node-input-typed-controlField").typedInput('value');
+            $("#node-input-controlField").val(controlValue);
             
             // Copy the outputField value from the typedinput element to the outputField element
             var outputValue = $("#node-input-typed-outputField").typedInput('value');
@@ -70,7 +77,12 @@
         <label for="node-input-typed-inputField"><i class="fa fa-sign-in"></i> Input field</label>
         <input id="node-input-typed-inputField" type="text" style="width: 70%">
         <input id="node-input-inputField" type="hidden">
-    </div>  
+    </div>
+    <div class="form-row">
+        <label for="node-input-typed-controlField"><i class="fa fa-cogs"></i> Control field</label>
+        <input id="node-input-typed-controlField" type="text" style="width: 70%">
+        <input id="node-input-controlField" type="hidden">
+    </div> 
     <div class="form-row">
         <label for="node-input-typed-outputField"><i class="fa fa-sign-out"></i> Output field</label>
         <input id="node-input-typed-outputField" type="text" style="width: 70%">

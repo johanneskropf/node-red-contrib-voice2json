@@ -21,6 +21,7 @@
     function Voice2JsonTextToIntentNode(config) {
         RED.nodes.createNode(this, config);
         this.inputField  = config.inputField;
+        this.controlField = config.controlField;
         this.outputField = config.outputField;
         this.profilePath = "";
         this.inputText = "";
@@ -196,8 +197,8 @@
         }
         
         if(node.autoStart){
-            node.warn("starting");
             setTimeout(()=>{
+                node.warn("starting");
                 spawnRecognize(node.msgObj);
                 return;
             }, 1500);
@@ -205,12 +206,14 @@
 
         node.on("input", function(msg) {
             
-            node.inputMsg = RED.util.getMessageProperty(msg, node.inputField);
+            node.inputMsg = (node.controlField in msg) ? RED.util.getMessageProperty(msg, node.controlField) : RED.util.getMessageProperty(msg, node.inputField);
+            
             node.msgObj = msg;
+            
             switch (node.inputMsg){
             
                 case "start":
- 
+                
                     if(node.recognizeIntent){
                         node.warn("restarting");
                         node.recognizeIntent.kill();
@@ -236,7 +239,7 @@
                     return;
                     
                 default:
-            
+                
                     if(node.processingNow == true) {
                         let warnmsg = "Ignoring input message because the previous message is not processed yet";
                         node.warn(warnmsg);
@@ -252,7 +255,7 @@
                     }
                     return;
                     
-            }  
+            }
             
         });
         
