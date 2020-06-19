@@ -46,6 +46,25 @@ This suite offers 5 Node-RED nodes in the Node-RED palette, located in the *"Voi
 
 ![Palette](https://user-images.githubusercontent.com/14224149/84941338-85f86480-b0e1-11ea-830c-c9950c1456c3.png)
 
+Those nodes can be combined to create a complete local voice setup:
+
+![Overview](https://user-images.githubusercontent.com/14224149/85172001-6fccde80-b270-11ea-9bc1-938267e00f8b.png)
+
++ The left side contains all the sources that produce a ***raw stream of pcm audio buffers***.  Each chunk contains a number of audio samples e.g. captured from a microphone.  Because raw pcm audio chunks don’t have any headers (containing information about the audio), the receiver cannot determine which audio format has arrived.  Therefore the Wait-Wake node and the Record-Command node require that the raw audio format is:
+   * Little Endian
+   * signed-integer
+   * 1 channel mono
+   * 16000 Hz
+   * 16 bit
++ The ***Wait-Wake*** node acts as a gate: It listens to the raw audio stream and looks for the wake word in it. If it finds the wake word, it will open the gate and start forwarding the raw audio stream until told otherwise (via the *"listen"* command).
++ The ***Record-Command*** node starts listening to the stream.  As soon as it assumes that a specified command is being spoken, it sends all the received raw audio as a single wav buffer (with proper headers) to its output.  Note that it only sends raw audio which it classifies as voice.
++ Beside the Record-Command node, there are also other sources (see the top side) that can offer a wav buffer.  For example the node-red-contrib-ui-microphone node, a wav file loaded from the file system, ...
+
+(only deals with wav audio in either a single buffer object or a wav file on the file system)
++ The ***STT-node*** expects wav audio (as buffer or as a file path), and will try to convert the speech signal to a plain text sentence.
++ The ***TTI-node*** requires text as input, and it will try to find information in that text.  That text can be delivered by the SST-node, but it can also from a large variety of other sources.
++ The JSON output from the TTI-node can be used to trigger other nodes in the Node-RED flow...
+
 Note that all the example flows from this page can easily be installed via the Node-RED *"Import"* menu:
 
 ![Import menu](https://user-images.githubusercontent.com/14224149/84938505-a7efe800-b0dd-11ea-8926-c0df710b872a.png)
