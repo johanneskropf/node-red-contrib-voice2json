@@ -58,9 +58,12 @@ Those nodes can be combined to create a complete local voice setup:
    * 16 bit
 + The ***Wait-Wake*** node acts as a gate: It listens to the raw audio stream and looks for the wake word in it. If it finds the wake word, it will open the gate and start forwarding the raw audio stream until told otherwise (via the *"listen"* command).
 + The ***Record-Command*** node starts listening to the stream.  As soon as it assumes that a specified command is being spoken, it sends all the received raw audio as a single wav buffer (with proper headers) to its output.  Note that it only sends raw audio which it classifies as voice.
-+ Beside the Record-Command node, there are also other sources (see the top side) that can offer a wav buffer.  For example the node-red-contrib-ui-microphone node, a wav file loaded from the file system, ...
-
-(only deals with wav audio in either a single buffer object or a wav file on the file system)
++ Beside the Record-Command node, there are also other sources (see the top side) that can offer a wav buffer.  For example the node-red-contrib-ui-microphone node, a wav file loaded from the file system, ...  Note that all those wav buffers need to have the following audio format again:
+   * Little Endian
+   * signed-integer
+   * 1 channel mono
+   * 16000 Hz
+   * 16 bit
 + The ***STT-node*** expects wav audio (as buffer or as a file path), and will try to convert the speech signal to a plain text sentence.
 + The ***TTI-node*** requires text as input, and it will try to find information in that text.  That text can be delivered by the SST-node, but it can also from a large variety of other sources.
 + The JSON output from the TTI-node can be used to trigger other nodes in the Node-RED flow...
@@ -68,19 +71,6 @@ Those nodes can be combined to create a complete local voice setup:
 Note that all the example flows from this page can easily be installed via the Node-RED *"Import"* menu:
 
 ![Import menu](https://user-images.githubusercontent.com/14224149/84938505-a7efe800-b0dd-11ea-8926-c0df710b872a.png)
-
-### *A note on audio formats*
-
-***The nodes in this suite expect a certain audio format. The format is:***
-* wait wake & record command:
-    * a stream of raw audio buffers
-* stt:
-    * a single wav as a buffer object or a path to a valid wav file
-* Little Endian
-* signed-integer
-* 1 channel mono
-* 16000 Hz
-* 16 bit
 
 ## Nodes
 
