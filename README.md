@@ -4,6 +4,8 @@
 
 Node-RED nodes that provide a simple wrapper for local speech and intent recognition on linux via [voice2json](http://voice2json.org/).
 
+The [voice2json](http://voice2json.org/) project offers a collection of command line speech and intent recognition tools on Linux or in a Docker container.
+
 Thanks to [Bart Butenaers](https://github.com/bartbutenaers), my partner in crime for this node!  He came up with the crazy idea that I should get involved in this business of node-red node development, and without his knowledge and his huge contribution to this node it wouldn't be here today.
 
 ## Install
@@ -35,10 +37,6 @@ More information about this can be found below in the section *"Notes on minimiz
 To be able to start voice recognition, a language profile needs to be installed.  Download the profile of your preferred language, from the [list](http://voice2json.org/#supported-languages) of supported languages.  The directory - where the language profile is stored - needs to be entered in the config node screen (see further).
 
 Remark: When using the Voice2Json Docker container, make sure the language profile is stored somewhere in your home directory.  Otherwise Voice2Json will not be able to access it from its Docker container.  If that is not possible, you will need to make the path accessible for the Docker container, by adding an additional `-v` argument in the above Voice2Json Docker run bash script.
-
-## Voice2json introduction
-
-The [voice2json](http://voice2json.org/) project offers a collection of command line speech and intent recognition tools on Linux or in a Docker container.
 
 ## Node Usage
 
@@ -214,9 +212,9 @@ This nodes input can be directly connected to the second output of the wait wake
 
 The speech to text node can be used to recognize sentences (which are specified in the selected config node).
 
-![STT flow](https://user-images.githubusercontent.com/14224149/84831754-31df7880-b02c-11ea-80b2-099a341172a1.png)
+![STT flow](https://user-images.githubusercontent.com/14224149/85177550-a01a7a00-b27c-11ea-9d53-05a1ba927888.png)
 ```
-[{"id":"a130ba16.223568","type":"voice2json-stt","z":"11289790.c89848","name":"","voice2JsonConfig":"3cf7b405.ee3c5c","inputType":"msg","inputField":"payload","outputField":"payload","autoStart":true,"x":660,"y":380,"wires":[["b1517366.97b42"]]},{"id":"b1517366.97b42","type":"debug","z":"11289790.c89848","name":"Text","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":850,"y":380,"wires":[]},{"id":"9bb2c518.0a5628","type":"http request","z":"11289790.c89848","name":"","method":"GET","ret":"bin","paytoqs":false,"url":"https://raw.githubusercontent.com/johanneskropf/node-red-contrib-voice2json/master/wav/turn_on_lights_kitchen.wav","tls":"","persist":false,"proxy":"","authType":"","x":450,"y":380,"wires":[["a130ba16.223568"]]},{"id":"6940b487.dcee8c","type":"inject","z":"11289790.c89848","name":"Execute STT","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":250,"y":380,"wires":[["9bb2c518.0a5628"]]},{"id":"697e631.4c9599c","type":"inject","z":"11289790.c89848","name":"Start","topic":"","payload":"start","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":450,"y":280,"wires":[["a130ba16.223568"]]},{"id":"fd112978.dcb108","type":"inject","z":"11289790.c89848","name":"Stop","topic":"","payload":"stop","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":450,"y":320,"wires":[["a130ba16.223568"]]},{"id":"3cf7b405.ee3c5c","type":"voice2json-config","z":"","profilePath":"/home/pi/voice2json_profile/en-us_kaldi-zamia-2.0","name":"Kaldi english profile","sentences":"[TurnLigths]\r\nturn (on | off){state} the light in the (kitchen | bathroom){room}","slots":[],"removeSlots":true}]
+[{"id":"a130ba16.223568","type":"voice2json-stt","z":"11289790.c89848","name":"","voice2JsonConfig":"3cf7b405.ee3c5c","inputField":"payload","controlField":"control","outputField":"payload","autoStart":true,"x":660,"y":380,"wires":[["b1517366.97b42"]]},{"id":"b1517366.97b42","type":"debug","z":"11289790.c89848","name":"Text","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":850,"y":380,"wires":[]},{"id":"9bb2c518.0a5628","type":"http request","z":"11289790.c89848","name":"Load wav buffer","method":"GET","ret":"bin","paytoqs":false,"url":"https://raw.githubusercontent.com/johanneskropf/node-red-contrib-voice2json/master/wav/turn_on_lights_kitchen.wav","tls":"","persist":false,"proxy":"","authType":"","x":440,"y":380,"wires":[["a130ba16.223568"]]},{"id":"6940b487.dcee8c","type":"inject","z":"11289790.c89848","name":"Execute STT","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":250,"y":380,"wires":[["9bb2c518.0a5628"]]},{"id":"697e631.4c9599c","type":"inject","z":"11289790.c89848","name":"Start","topic":"","payload":"start","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":230,"y":280,"wires":[["77b4222d.8654cc"]]},{"id":"fd112978.dcb108","type":"inject","z":"11289790.c89848","name":"Stop","topic":"","payload":"stop","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":230,"y":320,"wires":[["77b4222d.8654cc"]]},{"id":"77b4222d.8654cc","type":"change","z":"11289790.c89848","name":"payload -> control","rules":[{"t":"move","p":"payload","pt":"msg","to":"control","tot":"msg"}],"action":"","property":"","from":"","to":"","reg":false,"x":450,"y":320,"wires":[["a130ba16.223568"]]},{"id":"3cf7b405.ee3c5c","type":"voice2json-config","z":"","profilePath":"/home/pi/voice2json_profile/en-us_kaldi-zamia-2.0","name":"Kaldi english profile","sentences":"[TurnLigths]\r\nturn (on | off){state} the light in the (kitchen | bathroom){room}","slots":[],"removeSlots":true}]
 ```
 
 1. The STT node needs to be started.  There are 3 different ways to accomplish this:
@@ -251,9 +249,9 @@ Intent analysis involves searching information (rooms, switch statuses, names, .
 
 In the previous example flow, the STT node converted the wav file to a text sentence.  Now we will send this text to the TTI node, which will extract the required information from that text.
 
-![TTI flow](https://user-images.githubusercontent.com/14224149/84950157-ba265200-b0ee-11ea-9503-1d27fe4db88a.png)
+![TTI flow](https://user-images.githubusercontent.com/14224149/85178007-aceb9d80-b27d-11ea-85f2-55dca1034e8f.png)
 ```
-[{"id":"c23b841b.40e068","type":"voice2json-stt","z":"11289790.c89848","name":"","voice2JsonConfig":"3cf7b405.ee3c5c","inputType":"msg","inputField":"payload","outputField":"payload","autoStart":true,"x":660,"y":460,"wires":[["88000e6b.23f55"]]},{"id":"faef3d3a.f726d","type":"debug","z":"11289790.c89848","name":"Intent","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":1050,"y":460,"wires":[]},{"id":"4402e1cd.bc321","type":"http request","z":"11289790.c89848","name":"","method":"GET","ret":"bin","paytoqs":false,"url":"https://www.pacdv.com/sounds/voices/open-the-goddamn-door.wav","tls":"","persist":false,"proxy":"","authType":"","x":450,"y":460,"wires":[["c23b841b.40e068"]]},{"id":"dd141eca.7d435","type":"inject","z":"11289790.c89848","name":"Execute STT","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":250,"y":460,"wires":[["4402e1cd.bc321"]]},{"id":"88000e6b.23f55","type":"voice2json-tti","z":"11289790.c89848","name":"","voice2JsonConfig":"3cf7b405.ee3c5c","inputField":"payload.text","outputField":"payload","autoStart":true,"x":880,"y":460,"wires":[["faef3d3a.f726d"]]},{"id":"8cebce39.0bc7c","type":"change","z":"11289790.c89848","name":"","rules":[{"t":"move","p":"payload","pt":"msg","to":"payload.text","tot":"msg"}],"action":"","property":"","from":"","to":"","reg":false,"x":650,"y":400,"wires":[["88000e6b.23f55"]]},{"id":"6fdd8681.afc558","type":"inject","z":"11289790.c89848","name":"Start","topic":"","payload":"start","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":450,"y":360,"wires":[["8cebce39.0bc7c"]]},{"id":"13b82eb1.b72bf1","type":"inject","z":"11289790.c89848","name":"Stop","topic":"","payload":"stop","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":450,"y":400,"wires":[["8cebce39.0bc7c"]]},{"id":"3cf7b405.ee3c5c","type":"voice2json-config","z":"","profilePath":"/home/pi/voice2json_profile/en-us_kaldi-zamia-2.0","name":"Kaldi english profile","sentences":"[TurnLigths]\r\nturn (on | off){state} the light in the (kitchen | bathroom){room}","slots":[],"removeSlots":true}]
+[{"id":"faef3d3a.f726d","type":"debug","z":"11289790.c89848","name":"Intent","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":1050,"y":580,"wires":[]},{"id":"dd141eca.7d435","type":"inject","z":"11289790.c89848","name":"Inject sentence","topic":"","payload":"turn on the light in the kitchen","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":480,"y":580,"wires":[["88000e6b.23f55"]]},{"id":"88000e6b.23f55","type":"voice2json-tti","z":"11289790.c89848","name":"","voice2JsonConfig":"3cf7b405.ee3c5c","inputField":"payload","controlField":"control","outputField":"payload","autoStart":true,"x":880,"y":580,"wires":[["faef3d3a.f726d"]]},{"id":"8cebce39.0bc7c","type":"change","z":"11289790.c89848","name":"payload -> control","rules":[{"t":"move","p":"payload","pt":"msg","to":"control","tot":"msg"}],"action":"","property":"","from":"","to":"","reg":false,"x":670,"y":520,"wires":[["88000e6b.23f55"]]},{"id":"6fdd8681.afc558","type":"inject","z":"11289790.c89848","name":"Start","topic":"","payload":"start","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":450,"y":480,"wires":[["8cebce39.0bc7c"]]},{"id":"13b82eb1.b72bf1","type":"inject","z":"11289790.c89848","name":"Stop","topic":"","payload":"stop","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":450,"y":520,"wires":[["8cebce39.0bc7c"]]},{"id":"3cf7b405.ee3c5c","type":"voice2json-config","z":"","profilePath":"/home/pi/voice2json_profile/en-us_kaldi-zamia-2.0","name":"Kaldi english profile","sentences":"[TurnLigths]\r\nturn (on | off){state} the light in the (kitchen | bathroom){room}","slots":[],"removeSlots":true}]
 ```
 1. The sentences in the config node contain all the information that we want to extract from the text:
    ```
@@ -274,45 +272,14 @@ In the previous example flow, the STT node converted the wav file to a text sent
       "entities":[{
          "entity":"state",
          "value":"on",
-         "raw_value":"on",
-         "source":"",
-         "start":5,
-         "raw_start":5,
-         "end":7,
-         "raw_end":7,
-         "tokens":["on"],
-         "raw_tokens":[
-            "on"
-         ]
+         ...
       },
       {
          "entity":"room",
          "value":"kitchen",
-         "raw_value":"kitchen",
-         "source":"",
-         "start":25,
-         "raw_start":25,
-         "end":32,
-         "raw_end":32,
-         "tokens":[
-            "kitchen"
-         ],
-         "raw_tokens":[
-            "kitchen"
-         ]
+         ...
       }],
-      "raw_text":"turn on the light in the kitchen",
-      "recognize_seconds":0.0011993711814284325,
-      "tokens":[
-         ...
-      ],
-      "raw_tokens"[
-         ...
-      ],
-      "wav_seconds":null,
-      "transcribe_seconds":null,
-      "speech_confidence":null,
-      "wav_name":null,
+      ...
       "slots":{
          "state":"on",
          "room":"kitchen"
