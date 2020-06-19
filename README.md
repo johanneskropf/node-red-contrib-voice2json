@@ -191,7 +191,8 @@ Since the output is a big blob of text (instead of json), the Node-RED debug pan
 
 ### Wait Wake node
 
-A node to listen to a stream of raw audio buffers and detect a wake-word. When a wake word was detected it sends an object including the detected wake word, the time of detection relative to the nodes start and a unix timestamp to the first output. If the `Forward audio to 2nd output on detection` option is checked the node will start ignoring any detected wake words after a detection and start forwarding the raw audio chunks to its second output until it receives a payload of `listen` on which it will stop forwarding and start listening for a wake word again. The second output can be directly connected to record command node to record a command after a wake word was detected when in forward mode.
+A node to listen to a stream of raw audio buffers and detect a wake-word. When a wake word was detected it sends an object including the detected wake word, the time of detection relative to the nodes start and a unix timestamp to the first output. If the `Forward audio to 2nd output on detection` option is checked the node will start ignoring any detected wake words after a detection and start forwarding the raw audio chunks to its second output until it receives a payload of `listen` in the configured control property of the input msg object on which it will stop forwarding and start listening for a wake word again. The second output can be directly connected to record command node to record a command after a wake word was detected when in forward mode.
+The nodes wake word process can be stopped at anytime with a msg of `stop` in the configured control property of the input msg object. Note that the wait wake node will start up again after a timeout of 2 seconds if you dont stop the input audio stream when stopping the node. This way the stop command can be used to restart the node.
 A possible source for the input stream of raw audio buffers is [node-red-contrib-sox-record](https://github.com/johanneskropf/node-red-contrib-sox-record) which should work out of the box with this node.
 More info about how to set a wake word or train your own can be found in the [voice2json documentation](http://voice2json.org/commands.html#wait-wake).
 
@@ -211,7 +212,7 @@ The speech to text node can be used to recognize sentences (which are specified 
 
 1. The STT node needs to be started.  There are 3 different ways to accomplish this:
    + This node offers auto-start (at deployment time), that can be enabled by activating the *"auto start transcriber"* checkbox on the config screen.  The advantage is that this node will be started immediately (after a deploy or startup), which means it will be ready as soon as the first input voice message arrives.
-   + This node can be started explict, by injecting an input message with `msg.payload="start"` (and stopped via `msg.payload="stop"`).  This will be used mostly to restart this node after a new training has been executed. 
+   + This node can be started explict, by injecting an input message with `"start"` (and stopped via `"stop"`) as the content of the configured control property of the input msg object.  This will be used mostly to restart this node after a new training has been executed. 
    + This node will be autostarted automatically when an input voice message arrives, when this node is not started yet.  When relying solely on this mode, the first input voice message will take a while to process (since voice2json still needs to load all its resources).
    Therefore it is advised to use one of the first two modes, since voice2json can load its resources before audio arrives (which greatly reduces the time of the first transcription).  And the combination with the last mode will ensure fail safety: if the voice2json process would be halted for some reason, this node will automatically restart the process when the next input voice message arrives.  Which might be usefull in a 24/7 setup.
    
@@ -310,6 +311,8 @@ In the previous example flow, the STT node converted the wav file to a text sent
    }
    ```
    Based on the `confidence` field, it is possible to determine whether you want to accept the value or reject it...
+   
+The node can be started, stopped or restarted with the same messages as the stt node that include a valid payload in the configured control property of the input message object.
 
 ### *Notes on some principles in how the transcription / intent recognition works in voice2json*
 
