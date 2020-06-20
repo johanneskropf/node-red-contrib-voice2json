@@ -314,30 +314,56 @@ In the previous example flow, the STT node converted the wav file to a text sent
    
 The node can be started, stopped or restarted with the same messages as the stt node that include a valid payload in the configured control property of the input message object.
 
-### *Notes on some principles in how the transcription / intent recognition works in voice2json*
+## Advanced topics
+
+### How the transcription / intent recognition works in voice2json
 
 To learn about how voive2json works in detail and better understand how it works we recommend to have a look at the [whitepaper about the whole process](http://voice2json.org/whitepaper.html) by the voice2json project.
-Some basics are:
-Voice2json creates a [dictionary](http://voice2json.org/whitepaper.html#pronunciation-dictionary) and a [language model](http://voice2json.org/whitepaper.html#language-model) from your sentences at training time.
-At runtime on transcription/recognition voice2json will recognize the sentence which is the ***closest*** (i.e. the statistically most likely result), even if it doesn't match exactly.  The recognition is based only on the this limited vocabulary you used in the sentences.  This is necessary to be able to run voice recognition fast on modest hardware (like a Raspberry PI 3),  thats why voice2json uses this small language model and dictionary that it creates at training time from the limited set of sentences which you configured in the config node. It will always try to fit whatever audio you pass to it for transcription into the model and vocabulary it build it from those sentences.
 
-The side effects like false positives on random audio can be reduced with a number of strategies:
+Some basics about this:
++ Voice2json creates a [dictionary](http://voice2json.org/whitepaper.html#pronunciation-dictionary) and a [language model](http://voice2json.org/whitepaper.html#language-model) from your sentences at training time.
++ At runtime on transcription/recognition voice2json will recognize the sentence which is the ***closest*** (i.e. the statistically most likely result), even if it doesn't match exactly!  The recognition is based only on the this limited vocabulary you used in the sentences.  This is necessary to be able to run voice recognition fast on modest hardware (like a Raspberry PI 3),  thats why voice2json uses this small language model and dictionary that it creates at training time from the limited set of sentences which you configured in the config node. It will always try to fit whatever audio you pass to it for transcription into the model and vocabulary it build it from those sentences.
+
+### Limiting false positive results
+
+Since the STT node will always give a result (i.e. the closest one) even if it doesn't match, there will be false positives caused by random audio. These false positivies be reduced with a number of strategies:
 
 + One way would be to mix in a certain amount of the base language model from the profile your using. [The process for this is decribed here](http://voice2json.org/commands.html#language-model-mixing). This comes with a huge performance cost and will slow transcription by a factor of 3-4 times.
 + You can create a ***NULL*** intent. This would be an intent that includes either on one line or multiple lines some of the most common word including nouns, adjectives, verbs and articles of the language your using. Although it will reduce the accurracy of the recognition a little bit this will reduce the chance that random audio will be classified as one of your intents.  
 + In the object that the TTI node returns is a sub property under `intent.confidence` that gives a score between *0* and *1* on how close the transcription text was to the actual intent. This property can be used to sort out intents that are impropable. This is especially usefull together with a *NULL* intent.
 + The use of an accurate wake words, to make sure it only listens when you actually say something that is directed at it. The less random audio arrives at your stt and tti nodes the smaller the change of a fasle positive intent recognition becomes.
 
-## Notes on minimizing SD card wear in voice2jsons file based workflow
+### Minimizing SD card wearing
 
-The voice2json workflow is based on a few differnt concepts. One of them is that all handling of audio data is file based. In the [voice2json](http://voice2json.org/) documentation it describes it as follows:
-`All of the available commands are designed to work well in Unix pipelines, typically consuming/emitting plaintext or newline-delimited JSON. Audio input/output is file-based, so you can receive audio from any source.`
-The Node-RED wrapper we provide parses the emitted results from JSON to msg objects that you can very easily integrate into an existing Node-RED flow but you will still have to save audio data you want to process outside of Node-RED on your filesystem.
-If you run Node-RED and voice2json on an SBC that uses a file system on a medium like an SD card it would be preferable to prevent unnecessary writes and work with data in memory.
-This is why we implemented a feature were you can pass the wav data as a single buffer object to the stt node. As we need to have a copy of the wav in the file system we use the `/dev/shm/` directory to write a tmp copy of the passed in buffer. (if `/dev/shm/` is not available we will use the `/tmp/` directory, this is less ideal and you need to include this instead of `/dev/shm/` in your docker file if you choose the docker install)
-`/dev/shm/` is mounted to ram by default and you can read more about it [here](https://www.cyberciti.biz/tips/what-is-devshm-and-its-practical-usage.html).
+Voice2json expects all input to be file-based, which means you have to store a file on the filesystem and pass the file path to Voice2json. Which means you can simply use the STT node like this:
 
-On hardware similiar to a Raspberry Pi another possible approach would be to create your own folder that is mounted to tmpfs via fstab. You can do this by creating a folder using the `mkdir`command for example `mkdir /home/pi/tmp` and than adding the line `tmpfs  /home/pi/tmp  tmpfs  defaults,noatime,size=100m  0 0` to `/etc/fstab`. After a reboot `/home/pi/tmp`will be mounted to ram. This means that data in it will be lost upon reboot but sd card writes will be greatly reduced. You would now instead of sending a buffer containing the WAV data to the node pass in the path to the file in your own memory mounted folder.
+![Filesystem](https://user-images.githubusercontent.com/14224149/85193711-5efd8680-b2cb-11ea-8700-2d35a67c6cb7.png)
+
+1. Other nodes in the flow store a wav file on the filesystem.
+2. A path to that file is injected via an input message into the STT node.
+3. The STT node calls Voice2json and passes that file path.
+4. Voice2json will load the wav file from the filesystem, and process it.
+
+However this requires continiously writing to the filesystem, which can be very desctructive for some hardware like SD cards.  To solve that problem, an in-memory approach has been provided:
+
+![In memory](https://user-images.githubusercontent.com/14224149/85194428-dfbd8200-b2cd-11ea-8217-2c20530adab9.png)
+
+1. Another node in the flow (e.g. Record-Command node) injects a WAV buffer via an input message into the STT node.
+2. The STT node will write the WAV file to an ***in-memory filesystem /dev/shm***.  Directory `/dev/shm/` is mounted to ram by default and you can read more about it [here](https://www.cyberciti.biz/tips/what-is-devshm-and-its-practical-usage.html).
+3. The STT node calls Voice2json and passes that file path.
+4. Voice2json will load the wav file from the in-memory filesystem, and process it.
+
+Caution: not all Linux system provide the in-memory filesystem !  In those cases the STT node will use the `/tmp/` directory, which will result in lots of writing to filesystem again!  Note that in these cases you will need to include this path in the above Docker file, instead of `/dev/shm/` (if you use the docker container).
+
+When `/dev/shm/` is not available on hardware similiar to a Raspberry Pi, another solution might be available:
+1. Create a folder using the `mkdir`command (for example `mkdir /home/pi/tmp`).
+would be to create your own folder that is mounted to tmpfs via fstab. You can do this by creating a  and than 
+2. Add the line `tmpfs  /home/pi/tmp  tmpfs  defaults,noatime,size=100m  0 0` to file `/etc/fstab`. 
+3. After a reboot, the directory `/home/pi/tmp` will automatically be mounted to ram.
+4. Add nodes (e.g. the File-Out node) to your flow to store the WAV file into that in-memory directory.
+5. Inject a message into the STT node, containing the path to that WAV file.
+
+An in-memory filesystem means that data in it will be lost upon reboot, but sd card writes will be greatly reduced...
 More information on this approach can be found [here](https://www.zdnet.com/article/raspberry-pi-extending-the-life-of-the-sd-card/).
 
 ## Limitations
