@@ -198,10 +198,23 @@ Since the output is a big blob of text (instead of json), the Node-RED debug pan
 
 ### Wait Wake node
 
-A node to listen to a stream of raw audio buffers and detect a wake-word. When a wake word was detected it sends an object including the detected wake word, the time of detection relative to the nodes start and a unix timestamp to the first output. If the `Forward audio to 2nd output on detection` option is checked the node will start ignoring any detected wake words after a detection and start forwarding the raw audio chunks to its second output until it receives a payload of `listen` in the configured control property of the input msg object on which it will stop forwarding and start listening for a wake word again. The second output can be directly connected to record command node to record a command after a wake word was detected when in forward mode. The wait-wake node will act as a kind of gate for the record-command node this way as for it to only start recording when a wake word was detected.
-The nodes wake word process can be stopped at anytime with a msg of `stop` in the configured control property of the input msg object. Note that the wait wake node will start up again after a timeout of 2 seconds if you dont stop the input audio stream when stopping the node. This way the stop command can be used to restart the node.
+A node to listen to a stream of raw audio buffers and detect a wake-word in that stream. When a wake word is detected:
+1. It sends an output message on the first output, including the detected wake word and the time of detection relative to the nodes start and a unix timestamp to the first output. 
+2. If the `Forward audio to 2nd output on detection` option is checked, the node will start ignoring any detected wake words after a detection and start forwarding the raw audio chunks to its second output.  The forwarding continues until an input message is injected, containing `listen` in the configured control property.  Then it will stop forwarding and start listening for a wake word again. 
+
+The following figure explains how the wake-word will open the gate (thus forwarding the stream to the second output), and how the `listen` command will close the gate again:
+
+![Wake word](https://user-images.githubusercontent.com/14224149/85192727-e47d3880-b2c3-11ea-95b4-87c8d4daed1d.png)
+
+The second output can be directly connected to Record-Command node, to record a command after a wake word was detected (when in forward mode). The wait-wake node will act as a kind of gate for the Record-Command node this way as for it to only start recording when a wake word was detected.  This way it can be avoided that the Record-Command node has to process all conversations, which would be a waste of resources and could lead to unpredicatable results.
+
+The Wake-Word listening process can be stopped at anytime, by injecting an input message containing `stop` in the configured control property. Note that the wait wake node will automatically start up again after a timeout of 2 seconds, if you dont stop the input audio stream when stopping this node. This way the stop command can be used to restart the node.
+
 A possible source for the input stream of raw audio buffers is [node-red-contrib-sox-record](https://github.com/johanneskropf/node-red-contrib-sox-record) which should work out of the box with this node.
-More info about how to set a wake word or train your own can be found in the [voice2json documentation](http://voice2json.org/commands.html#wait-wake).
+
+TODO Jonathan: add small example flow
+
+Currently the default wakeword is ***"hey mycroft"***.  If you want to setup a custom wake-word, you can find more information in the [voice2json documentation](http://voice2json.org/commands.html#wait-wake).
 
 ### Record Command node
 
