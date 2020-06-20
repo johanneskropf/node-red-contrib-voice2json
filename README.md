@@ -224,7 +224,7 @@ A node to record a voice command from a stream of raw audio buffers. The record 
 
 As soon as its stops recording it will send a single buffer to the configured output, which is a wav audio object containing the chunks of the detected speech command:
 
-![Recording chunks](https://user-images.githubusercontent.com/14224149/85193327-ba2d7a00-b2c7-11ea-925b-4356cd6ea593.png)
+![Recording chunks](https://user-images.githubusercontent.com/14224149/85193443-cfef6f00-b2c8-11ea-833e-fa4ef46f50ce.png)
 
 If the input audio stream is not stopped, it automatically will start recording a new command after a 2 second timeout.
 
