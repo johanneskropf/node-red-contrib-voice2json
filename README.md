@@ -218,8 +218,19 @@ Currently the default wakeword is ***"hey mycroft"***.  If you want to setup a c
 
 ### Record Command node
 
-A node to record a voice command from a stream of raw audio buffers. The record command node will start recording a voice command from a stream of raw audio buffers as soon as they start arriving on the configured input. It will stop recording when it detects silence / the end of the command. As soon as its stops recording it will send a single buffer to the configured output containing a wav audio object that consists just of the detected speech. If the input audio stream is not stopped it will start recording a new command after a 2 second timeout.
-This nodes input can be directly connected to the second output of the wait wake node in forward mode or any other node that can send a stream of raw audio buffers in the correct format. The output wav buffer can be directly fed to the voice2json stt node for transcription.
+A node to record a voice command from a stream of raw audio buffers. The record command node will:
++ Start recording a voice command from a stream of raw audio buffers, as soon as those buffers start arriving on the configured input.
++ Stop recording when it detects silence, which means the end of the command. 
+
+As soon as its stops recording it will send a single buffer to the configured output, which is a wav audio object containing the chunks of the detected speech command:
+
+![Recording chunks](https://user-images.githubusercontent.com/14224149/85193327-ba2d7a00-b2c7-11ea-925b-4356cd6ea593.png)
+
+If the input audio stream is not stopped, it automatically will start recording a new command after a 2 second timeout.
+
+The input of this can be directly connected to the second output of the wait wake node in forward mode or any other node that can send a stream of raw audio buffers in the correct format. The output wav buffer can be directly fed to the voice2json stt node input for transcription.
+
+TODO Jonathan: add small example flow
 
 ### Speech To Text node
 
