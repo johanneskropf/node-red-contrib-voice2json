@@ -70,6 +70,12 @@
         function checkWav(filePath) {
             
             let reasons = "";
+            try {
+                const fileInfo = execSync("file " + filePath).toString();
+            } catch (error) {
+                node.error("couldnt check file for properties");
+                (node.transcribeWav) ? node_status(["error","red","dot"],1500,["running","blue","ring"]) : node_status(["error","red","dot"]);
+            }
             const fileInfo = execSync("file " + filePath).toString();
             if (!fileInfo.match(/WAVE audio/g)) { reasons += "not a wav file\n"; }
             if (!fileInfo.match(/16 bit/g)) { reasons += "wrong bit depth: should be 16 bit\n"; }
@@ -361,7 +367,11 @@
                 if (err) { node.error("couldnt check for leftovers in " + checkDir); return; }
                 files.forEach(file => {
                     if (file.match(node.fileId)) {
-                        fs.unlinkSync(checkDir + file);
+                        try {
+                            fs.unlinkSync(checkDir + file);
+                        } catch (error) {
+                            node.error("couldnt delete leftover " + file);
+                        }
                     }
                 });
                 return;
