@@ -17,6 +17,7 @@
  module.exports = function(RED) {
     var settings = RED.settings;
     const { exec } = require("child_process");
+    const { execSync } = require("child_process");
     const { spawn } = require("child_process");
     const fs = require("fs");
     
@@ -62,6 +63,24 @@
                     node.statusTimer = false;
                     
                 },timeout);
+            }
+            
+        }
+        
+        function checkWav(filePath) {
+            
+            let reasons = "";
+            const fileInfo = execSync("file " + filePath).toString();
+            if (!fileInfo.match(/WAVE audio/g)) { reasons += "not a wav file\n"; }
+            if (!fileInfo.match(/16 bit/g)) { reasons += "wrong bit depth: should be 16 bit\n"; }
+            if (!fileInfo.match(/16000 Hz/g)) { reasons += "wrong sample rate: should be 16000 Hz\n"; }
+            if (!fileInfo.match(/mono/g)) { reasons += "not mono: audio should only have 1 channel\n"; }
+            if (reasons.length !== 0) { 
+                node.error("input audio not in the right format:\n" + reasons);
+                (node.transcribeWav) ? node_status(["error","red","dot"],1500,["running","blue","ring"]) : node_status(["error","red","dot"]);
+                return false;
+            } else {
+                return true;
             }
             
         }
@@ -162,6 +181,9 @@
                 }
                 return;
             }
+            
+            if(!checkWav(node.filePath)) { return; }
+            
             node.processingNow = true;
             node.filePath += "\n";
             try {
@@ -217,6 +239,8 @@
                 return;
             }
             
+            if(!checkWav(node.filePath)) { return; }
+            
             node.processingNow = true;
             node.filePath += "\n";
             try {
@@ -265,6 +289,8 @@
         node.on("input", function(msg) {
             
             node.inputMsg = (node.controlField in msg) ? RED.util.getMessageProperty(msg, node.controlField) : RED.util.getMessageProperty(msg, node.inputField);
+            
+            if (Buffer.isBuffer(node.inpuMsg) && node.inpuMsg.length === 0) { node.warn("ignoring buffer input as its empty"); return; }
             
             node.msgObj = msg;
             
@@ -329,6 +355,17 @@
         
         node.on("close",function() {
             node_status();
+            
+            const checkDir = (node.shm) ? "/dev/shm/" : "/tmp/";
+            fs.readdir(checkDir, (err,files) => {
+                if (err) { node.error("couldnt check for leftovers in " + checkDir); return; }
+                files.forEach(file => {
+                    if (file.match(node.fileId)) {
+                        fs.unlinkSync(checkDir + file);
+                    }
+                });
+                return;
+            });
             
             if(node.transcribeWav) {
                 process.kill(-node.transcribeWav.pid);
