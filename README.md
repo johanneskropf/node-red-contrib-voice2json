@@ -78,11 +78,9 @@ As a prerequisite for the example flows to work please install voice2json and do
 
 Create a config node for each installed voice2json language profile.
 
-#### Overview
-
 The config node contains the following information:
 
-<img src="https://user-images.githubusercontent.com/46578064/85834391-92d92000-b793-11ea-9ff6-acf152a9869a.jpeg" width="400"><img src="https://user-images.githubusercontent.com/46578064/85834424-9ff60f00-b793-11ea-8bb2-90ce7cfde7e0.jpeg" width="400">
+<img src="https://user-images.githubusercontent.com/46578064/85868634-dc912d00-b7ca-11ea-944d-188a6c2b2359.jpeg" width="400"><img src="https://user-images.githubusercontent.com/46578064/85868642-e024b400-b7ca-11ea-87aa-24f64437dcc4.jpeg" width="400">
 
 + A ***path*** to a local voice2json [language profile](http://voice2json.org/#supported-languages) directory.
 
