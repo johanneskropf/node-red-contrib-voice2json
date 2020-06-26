@@ -70,11 +70,19 @@ Note that all the example flows from this page can easily be installed via the N
 
 ![Import menu](https://user-images.githubusercontent.com/14224149/84938505-a7efe800-b0dd-11ea-8926-c0df710b872a.png)
 
+As a prerequisite for the example flows to work please install voice2json and download the [en-us kaldi profile](https://github.com/synesthesiam/en-us_kaldi-zamia/archive/v2.0.tar.gz). Once you have everything downloaded and set up import the example flow and go into the config and change the profile path to your download location of the profile.
+
 ## Nodes
 
 ### Config node
 
-Create a config node for each installed voice2json language profile.  The config node contains the following information:
+Create a config node for each installed voice2json language profile.
+
+#### Overview
+
+The config node contains the following information:
+
+<img src="https://user-images.githubusercontent.com/46578064/85834391-92d92000-b793-11ea-9ff6-acf152a9869a.jpeg" width="400"><img src="https://user-images.githubusercontent.com/46578064/85834424-9ff60f00-b793-11ea-8bb2-90ce7cfde7e0.jpeg" width="400">
 
 + A ***path*** to a local voice2json [language profile](http://voice2json.org/#supported-languages) directory.
 
@@ -113,14 +121,21 @@ Create a config node for each installed voice2json language profile.  The config
 
    + A slot ***name***, which needs to be unique.  The slot name is in fact a file name (without extension).
    
-   + Whether the slot is ***managed by*** Node-RED or an external program.  In the latter case, the slot content will be read-only in Node-RED since it will be updated by an external background program.
+   + Whether the slot is ***managed from the config screen*** or ***some where else***.  In the latter case, the slot content will be read-only in the config screen since it will be updated / created by some other means than handwriting it in the config.
+   An example of this would be a slot that is created from a flow within nodered and than written to the profile/slots folder with a file node. This could be triggered by schedule or some external trigger to automatically update a slot that contains dynamic content. A simple example is this:
    
-   + Whether the slot is an ***executable***, which means that the slot is a shell script.  This executable is able to load all the slot values by itself.  For example:
+   <img src="https://user-images.githubusercontent.com/46578064/85833250-b69b6680-b791-11ea-8dad-ed4625c0b1b5.jpeg" width="500">
+   
+   ```
+   [{"id":"72efe1bf.a0fce8","type":"voice2json-training","z":"6417ff5b.9a455","name":"","voice2JsonConfig":"a66d83bd.16a7d8","inputField":"payload","outputField":"payload","loadedProfile":"","x":330,"y":1260,"wires":[["71e9a746.3ba92","bf6c13ea.37af88"]]},{"id":"e5d1f674.546938","type":"inject","z":"6417ff5b.9a455","name":"","topic":"","payload":"train","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":150,"y":1260,"wires":[["72efe1bf.a0fce8"]]},{"id":"71e9a746.3ba92","type":"debug","z":"6417ff5b.9a455","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":530,"y":1260,"wires":[]},{"id":"1546a2dd.8db285","type":"comment","z":"6417ff5b.9a455","name":"build a slot with a file node from nodered","info":"This example flow builds a slot with a file node from nodered. The slot needs to be written with the file node before starting training\nWhen training finished you can try it by injecting the provided example wav into an stt node.\nFor this example to work please download the en-us kaldi profile from voice2json.org to your home folder and when necessary adapt the path to the profile in the config node and the path that the file node points to to the slots folder within. Than click the train button. ","x":380,"y":1140,"wires":[]},{"id":"b76c0a79.164708","type":"inject","z":"6417ff5b.9a455","name":"","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":160,"y":1380,"wires":[["6c933536.8001cc"]]},{"id":"3413788e.4b29d","type":"voice2json-stt","z":"6417ff5b.9a455","name":"","voice2JsonConfig":"a66d83bd.16a7d8","inputField":"payload","controlField":"control","outputField":"payload","autoStart":true,"x":520,"y":1380,"wires":[["b9f846b6.48f258"]]},{"id":"b9f846b6.48f258","type":"debug","z":"6417ff5b.9a455","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":710,"y":1380,"wires":[]},{"id":"6c933536.8001cc","type":"http request","z":"6417ff5b.9a455","name":"","method":"GET","ret":"bin","paytoqs":false,"url":"https://github.com/johanneskropf/node-red-contrib-voice2json/raw/master/wav/color.wav","tls":"","persist":false,"proxy":"","authType":"","x":330,"y":1380,"wires":[["3413788e.4b29d"]]},{"id":"597fedfb.537b14","type":"file","z":"6417ff5b.9a455","name":"","filename":"/home/pi/en-us_kaldi-zamia-2.0/slots/color","appendNewline":false,"createDir":true,"overwriteFile":"true","encoding":"none","x":570,"y":1200,"wires":[[]]},{"id":"ca242248.28d35","type":"inject","z":"6417ff5b.9a455","name":"","topic":"","payload":"","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":150,"y":1200,"wires":[["3d86e8d9.99f99"]]},{"id":"3d86e8d9.99f99","type":"template","z":"6417ff5b.9a455","name":"color","field":"payload","fieldType":"msg","format":"text","syntax":"plain","template":"red\ngreen\nyellow\nblue\npurple\npink\ngreen\nbrown","output":"str","x":290,"y":1200,"wires":[["597fedfb.537b14","71e9a746.3ba92"]]},{"id":"bf6c13ea.37af88","type":"change","z":"6417ff5b.9a455","name":"restart","rules":[{"t":"set","p":"control","pt":"msg","to":"start","tot":"str"}],"action":"","property":"","from":"","to":"","reg":false,"x":450,"y":1320,"wires":[["3413788e.4b29d"]]},{"id":"a66d83bd.16a7d8","type":"voice2json-config","z":"","profilePath":"/home/pi/en-us_kaldi-zamia-2.0","name":"enUsKaldi","sentences":"[GetTime]\nwhat time is it\ntell me the time\n\n[GetTemperature]\nwhats the temperature\nhow (hot | cold) is it\n\n[GetGarageState]\nis the garage door (open | closed)\n\n[ChangeLightState]\nlight_name = ((living room lamp | garage light) {name}) | <ChangeLightColor.light_name>\nlight_state = (on | off) {state}\n\nturn <light_state> [the] <light_name>\nturn [the] <light_name> <light_state>\n\n[ChangeLightColor]\nlight_name = (bedroom light) {name}\n\nset [the] <light_name> [to] $color\nmake [the] <light_name> $color","slots":[{"fileName":"rhasspy/number","managedBy":"external","fileContent":null,"executable":true},{"fileName":"color","managedBy":"external","fileContent":null,"executable":false}],"removeSlots":true}]
+   ```
+   
+   + Whether the slot is an ***executable***, which means that the slot is a shell script.  This executable is able to load all the slot values at trainign time by itself.  For example:
       ```
       #!/usr/bin/env node
       const http = require('http');
 
-      http.get('http://localhost:1880/test_http', (resp) => {
+      http.get('http://localhost:1880/color', (resp) => {
          let data = '';
          resp.on('data', (chunk) => {
             data += chunk;
@@ -134,16 +149,19 @@ Create a config node for each installed voice2json language profile.  The config
          return;
       });
       ```
-     This executable slot file will load data via a http request from your Node-RED flow (at training time!), which means you can extend your Node-RED flow to compose an array of values dynamically:
+     This executable slot file will load data via a http request from your Node-RED flow (at training time!), which means you can extend your Node-RED flow to compose an array of values dynamically. Here is an example with detailed description in the comment node:
      
-     ![Executable slot flow](https://user-images.githubusercontent.com/14224149/84831161-2049a100-b02b-11ea-9a87-6af2035e17bd.png)
+     <img src="https://user-images.githubusercontent.com/46578064/85833264-bd29de00-b791-11ea-90a4-9b278673bddb.jpeg" width="500">
      
-     TODO: export flow and share it here ...
-     TODO: show a flow with a file-out node to write a slot file from your node-red flow, and afterwards start the training...
+     ```
+     [{"id":"66e3f3b0.e02504","type":"http in","z":"6417ff5b.9a455","name":"","url":"/color_slot","method":"get","upload":false,"swaggerDoc":"","x":180,"y":880,"wires":[["75ad979d.0f3f48"]]},{"id":"a61fe0a3.81d528","type":"http response","z":"6417ff5b.9a455","name":"","statusCode":"","headers":{},"x":570,"y":880,"wires":[]},{"id":"75ad979d.0f3f48","type":"change","z":"6417ff5b.9a455","name":"colors slot builder","rules":[{"t":"set","p":"payload","pt":"msg","to":"[\"red\",\"green\",\"blue\",\"yellow\",\"purple\",\"brown\",\"pink\"]","tot":"json"}],"action":"","property":"","from":"","to":"","reg":false,"x":390,"y":880,"wires":[["a61fe0a3.81d528","1bd754a4.9b960b"]]},{"id":"ef819a8d.e86b7","type":"voice2json-training","z":"6417ff5b.9a455","name":"","voice2JsonConfig":"a66d83bd.16a7d8","inputField":"payload","outputField":"payload","loadedProfile":"","x":350,"y":940,"wires":[["1bd754a4.9b960b","a167934e.842ce"]]},{"id":"2aee0277.dd776e","type":"inject","z":"6417ff5b.9a455","name":"","topic":"","payload":"train","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":170,"y":940,"wires":[["ef819a8d.e86b7"]]},{"id":"1bd754a4.9b960b","type":"debug","z":"6417ff5b.9a455","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":550,"y":940,"wires":[]},{"id":"fa2533f2.8a15d8","type":"comment","z":"6417ff5b.9a455","name":"build slot from http request to nodered","info":"This example flow builds a slot from an http request to nodered. Here we substituted the color slot in the standard example sentences that come with the en-us kaldi profile with a little node.js script that gets called at training time. This request can trigger a flow in nodered to do anything as long as it returns an array of values for the slot to the http response node. In this case a simple array of colors. You will see the request beeing triggered in the debug tab after you started training.\nWhen training finished you can try it by injecting the provided example wav into an stt node.\nFor this example to work please download the en-us kaldi profile from voice2json.org to your home folder and when necessary adapt the path in the config node to your download location and than click the train button.","x":390,"y":820,"wires":[]},{"id":"304e63ed.52ef9c","type":"inject","z":"6417ff5b.9a455","name":"","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":180,"y":1060,"wires":[["374bcdc.8462132"]]},{"id":"2b9e1c4e.2fbabc","type":"voice2json-stt","z":"6417ff5b.9a455","name":"","voice2JsonConfig":"a66d83bd.16a7d8","inputField":"payload","controlField":"control","outputField":"payload","autoStart":true,"x":540,"y":1060,"wires":[["d13d9f94.81da4"]]},{"id":"d13d9f94.81da4","type":"debug","z":"6417ff5b.9a455","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":730,"y":1060,"wires":[]},{"id":"374bcdc.8462132","type":"http request","z":"6417ff5b.9a455","name":"","method":"GET","ret":"bin","paytoqs":false,"url":"https://github.com/johanneskropf/node-red-contrib-voice2json/raw/master/wav/color.wav","tls":"","persist":false,"proxy":"","authType":"","x":350,"y":1060,"wires":[["2b9e1c4e.2fbabc"]]},{"id":"a167934e.842ce","type":"change","z":"6417ff5b.9a455","name":"restart","rules":[{"t":"set","p":"control","pt":"msg","to":"start","tot":"str"}],"action":"","property":"","from":"","to":"","reg":false,"x":470,"y":1000,"wires":[["2b9e1c4e.2fbabc"]]},{"id":"a66d83bd.16a7d8","type":"voice2json-config","z":"","profilePath":"/home/pi/en-us_kaldi-zamia-2.0","name":"enUsKaldi","sentences":"[GetTime]\nwhat time is it\ntell me the time\n\n[GetTemperature]\nwhats the temperature\nhow (hot | cold) is it\n\n[GetGarageState]\nis the garage door (open | closed)\n\n[ChangeLightState]\nlight_name = ((living room lamp | garage light) {name}) | <ChangeLightColor.light_name>\nlight_state = (on | off) {state}\n\nturn <light_state> [the] <light_name>\nturn [the] <light_name> <light_state>\n\n[ChangeLightColor]\nlight_name = (bedroom light) {name}\n\nset [the] <light_name> [to] $color\nmake [the] <light_name> $color","slots":[{"fileName":"rhasspy/number","managedBy":"external","fileContent":null,"executable":true},{"fileName":"color","managedBy":"external","fileContent":null,"executable":false}],"removeSlots":true}]
+     ```
    
-   + The ***content*** of the slot.  
+   + The ***content*** of the slot.
    
-   For example a slot file called weekdays could contain the following values:
+   You can look at / edit the content of any slot file by clicking the edit view / icon in the slot table. The slot content will be shown in the edit window at the bottom of the slots tab.
+   
+   This is an example for a slot file called weekdays that could contain the following values:
    ```
    monday
    tuesday
@@ -153,14 +171,14 @@ Create a config node for each installed voice2json language profile.  The config
    saturday
    friday
    ```
-   Can be used it in our sentences.ini like this:
+   which can be used in the sentences.ini like this:
    ```
    (what | how) is the weather (<day> | on ($weekday){weekday})
    ```
-   Where `($weekday)` references our weekday slot file, and the tag {weekday} is added for the intent recognition .
-   This way a sentence like *"how is the weather on tuesday"* can be recognize, and also all the possible permutations.
+   Where `($weekday)` references our weekday slot file, and the tag `{weekday}` is added for the intent recognition .
+   This way a sentence with the content *"how is the weather on tuesday"* can be recognized including all the permutations defined by the corresponding rule in the sentences.ini.
 
-   It is also possible to use the weekday slot in another intent, by using these sentences:
+   It is also possible to reuse slots in more than one intent:
    ```
    [Calendar]
    do i have (an appointment | appointments)  [(today | on ($weekday){weekdays})]
@@ -171,6 +189,8 @@ Create a config node for each installed voice2json language profile.  The config
    what is the weather [like]
    (what | how) is the weather (<day> | on ($weekday){weekday})
    ```
+   
+   + ***Please read the [official documetation on the grammar on the voice2json website](http://voice2json.org/sentences.html) as this setion only gave a brief overview of the capabilities.***
 
 ### Training node
 
@@ -212,7 +232,13 @@ The Wake-Word listening process can be stopped at anytime, by injecting an input
 
 A possible source for the input stream of raw audio buffers is [node-red-contrib-sox-record](https://github.com/johanneskropf/node-red-contrib-sox-record) which should work out of the box with this node.
 
-TODO Jonathan: add small example flow
+Here is a small examle flow using [node-red-contrib-sox-record](https://github.com/johanneskropf/node-red-contrib-sox-record) and a connected microphone to see the wait-wake node in action:
+
+<img src="https://user-images.githubusercontent.com/46578064/85836583-18aa9a80-b797-11ea-8936-cf4d20b8041f.jpeg" width="500">
+
+```
+[{"id":"d70f5ed2.7088","type":"sox-record","z":"6417ff5b.9a455","name":"","buttonStart":"button","inputs":0,"inputSource":"1,0","byteOrder":"-L","encoding":"signed-integer","channels":1,"rate":16000,"bits":16,"gain":"0","lowpass":8000,"showDuration":false,"durationType":"forever","durationLength":0,"silenceDetection":"nothing","silenceDuration":"2.0","silenceThreshold":"2.0","outputFormat":"stream","manualPath":"color","debugOutput":false,"x":170,"y":1660,"wires":[["5b72f1e6.7d8e2"],[]]},{"id":"5b72f1e6.7d8e2","type":"voice2json-wait-wake","z":"6417ff5b.9a455","name":"","voice2JsonConfig":"a66d83bd.16a7d8","inputField":"payload","controlField":"control","outputField":"payload","nonContinousListen":true,"x":380,"y":1660,"wires":[["41502e87.5abfd","3a18ade7.ce6202"],["dc92e18d.01e8c"]]},{"id":"41502e87.5abfd","type":"debug","z":"6417ff5b.9a455","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":590,"y":1600,"wires":[]},{"id":"3a18ade7.ce6202","type":"trigger","z":"6417ff5b.9a455","op1":"","op2":"listen","op1type":"nul","op2type":"str","duration":"3","extend":false,"units":"s","reset":"","bytopic":"all","name":"3s than listen","x":590,"y":1660,"wires":[["5b72f1e6.7d8e2"]]},{"id":"dc92e18d.01e8c","type":"debug","z":"6417ff5b.9a455","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":590,"y":1720,"wires":[]},{"id":"c0769b02.c6d23","type":"inject","z":"6417ff5b.9a455","name":"stop (restart)","topic":"","payload":"stop","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":170,"y":1600,"wires":[["5a559572.e002fc"]]},{"id":"5a559572.e002fc","type":"change","z":"6417ff5b.9a455","name":"","rules":[{"t":"move","p":"payload","pt":"msg","to":"control","tot":"msg"}],"action":"","property":"","from":"","to":"","reg":false,"x":370,"y":1600,"wires":[["5b72f1e6.7d8e2"]]},{"id":"c3f82253.925cc","type":"comment","z":"6417ff5b.9a455","name":"wait-wake example","info":"Prerequisites for this example flow are that you must have a [node-red-sox-utils](https://github.com/johanneskropf/node-red-contrib-sox-utils) installed and a microphone connected to your raspberry or other device. Choose your input device in the mic nodes config and click the button to start recording. After a brief start up period the wait-wake node can be triggered by speaking the standard wake word of *hey mycroft* if no custom wake word has been configured in the selected profiles profile.yml. The wait-wake node will than forward the audio from the mic for three seconds on its second output and ignore wake words until told to listen again. You can restart (stop) the node by injecting start to the control topic.","x":410,"y":1540,"wires":[]},{"id":"a66d83bd.16a7d8","type":"voice2json-config","z":"","profilePath":"/home/pi/en-us_kaldi-zamia-2.0","name":"enUsKaldi","sentences":"[GetTime]\nwhat time is it\ntell me the time\n\n[GetTemperature]\nwhats the temperature\nhow (hot | cold) is it\n\n[GetGarageState]\nis the garage door (open | closed)\n\n[ChangeLightState]\nlight_name = ((living room lamp | garage light) {name}) | <ChangeLightColor.light_name>\nlight_state = (on | off) {state}\n\nturn <light_state> [the] <light_name>\nturn [the] <light_name> <light_state>\n\n[ChangeLightColor]\nlight_name = (bedroom light) {name}\n\nset [the] <light_name> [to] $color\nmake [the] <light_name> $color","slots":[{"fileName":"rhasspy/number","managedBy":"external","fileContent":null,"executable":true},{"fileName":"color","managedBy":"external","fileContent":null,"executable":false}],"removeSlots":true}]
+```
 
 Currently the default wakeword is ***"hey mycroft"***.  If you want to setup a custom wake-word, you can find more information in the [voice2json documentation](http://voice2json.org/commands.html#wait-wake).
 
@@ -230,7 +256,13 @@ If the input audio stream is not stopped, it automatically will start recording 
 
 The input of this can be directly connected to the second output of the wait wake node in forward mode or any other node that can send a stream of raw audio buffers in the correct format. The output wav buffer can be directly fed to the voice2json stt node input for transcription.
 
-TODO Jonathan: add small example flow
+Here is a simple example flow:
+
+<img src="https://user-images.githubusercontent.com/46578064/85837549-74295800-b798-11ea-8d7f-efd72e0e9c53.jpeg" width="500">
+
+```
+[{"id":"184ac771.24eb91","type":"sox-record","z":"6417ff5b.9a455","name":"","buttonStart":"msg","inputs":1,"inputSource":"1,0","byteOrder":"-L","encoding":"signed-integer","channels":1,"rate":16000,"bits":16,"gain":"0","lowpass":8000,"showDuration":false,"durationType":"forever","durationLength":0,"silenceDetection":"nothing","silenceDuration":"2.0","silenceThreshold":"2.0","outputFormat":"stream","manualPath":"","debugOutput":false,"x":290,"y":1900,"wires":[["ae954e1b.8764f"],[]]},{"id":"b21a3465.f1e6d","type":"inject","z":"6417ff5b.9a455","name":"","topic":"","payload":"start","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":130,"y":1900,"wires":[["184ac771.24eb91"]]},{"id":"ea9f63d8.ea2ba8","type":"change","z":"6417ff5b.9a455","name":"stop","rules":[{"t":"set","p":"payload","pt":"msg","to":"stop","tot":"str"}],"action":"","property":"","from":"","to":"","reg":false,"x":370,"y":1960,"wires":[["184ac771.24eb91"]]},{"id":"ae954e1b.8764f","type":"voice2json-record-command","z":"6417ff5b.9a455","name":"","voice2JsonConfig":"a66d83bd.16a7d8","inputField":"payload","outputField":"payload","x":530,"y":1900,"wires":[["ea9f63d8.ea2ba8","4d0e9d91.67e32c"]]},{"id":"4d0e9d91.67e32c","type":"debug","z":"6417ff5b.9a455","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":770,"y":1900,"wires":[]},{"id":"6550c0a.e92874","type":"comment","z":"6417ff5b.9a455","name":"record command example","info":"Prerequisites for this example flow are that you must have a [node-red-sox-utils](https://github.com/johanneskropf/node-red-contrib-sox-utils) installed and a microphone connected to your raspberry or other device. Choose your input device in the mic nodes config and inject start to start recording and say something.\nThe record-command node will now listen to the stream of buffers from the microphone and as soon as it detects silence it will emit a single wav buffer containing the spoken command. ","x":450,"y":1840,"wires":[]},{"id":"a66d83bd.16a7d8","type":"voice2json-config","z":"","profilePath":"/home/pi/en-us_kaldi-zamia-2.0","name":"enUsKaldi","sentences":"[GetTime]\nwhat time is it\ntell me the time\n\n[GetTemperature]\nwhats the temperature\nhow (hot | cold) is it\n\n[GetGarageState]\nis the garage door (open | closed)\n\n[ChangeLightState]\nlight_name = ((living room lamp | garage light) {name}) | <ChangeLightColor.light_name>\nlight_state = (on | off) {state}\n\nturn <light_state> [the] <light_name>\nturn [the] <light_name> <light_state>\n\n[ChangeLightColor]\nlight_name = (bedroom light) {name}\n\nset [the] <light_name> [to] $color\nmake [the] <light_name> $color","slots":[{"fileName":"rhasspy/number","managedBy":"external","fileContent":null,"executable":true},{"fileName":"color","managedBy":"external","fileContent":null,"executable":false}],"removeSlots":true}]
+```
 
 ### Speech To Text node
 
