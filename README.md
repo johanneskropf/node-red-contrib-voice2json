@@ -29,7 +29,7 @@ docker run -i \
        -w "$(pwd)" \
        -e "HOME=${HOME}" \
        --user "$(id -u):$(id -g)" \
-       synesthesiam/voice2json:2.0.0 "$@"
+       synesthesiam/voice2json "$@"
 ```
 More information about this can be found below in the section *"Notes on minimizing SD card wear in voice2jsons file based workflow"*.
 
