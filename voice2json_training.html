@@ -104,9 +104,9 @@
     language profile</strong><br/></p>
     <p><strong>Usage:</strong><br/>
     The node will start the training process for the choosen voice2json configuration when it receives
-    a payload of <strong>train</strong> in the configured input property of the <code>msg</code>
-    object. It will output a log of the training results as the payload of the configured output property
-    of the <code>msg</code> object.
+    a <strong>"train"</strong> command in the configured input property of the input <code>msg</code>
+    object. After the training is completed (or failed), it will send a log of the training results in the configured output property
+    of the output <code>msg</code> object.
     </p>
     <p><strong>Configuration:</strong><br/>
     You can configure the input and output properties of the <code>msg</code> object that the
