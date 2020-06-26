@@ -420,7 +420,7 @@ Keep in mind that this setup will result in a large amount of network traffic, e
 
 You can create a siri-shortcut in the shortcuts app on your iphone or ipad with a content like this:
 
-<img src="https://user-images.githubusercontent.com/46578064/85840595-092e5000-b79d-11ea-8662-6559c9b14df6.jpeg" width="600">
+<img src="https://user-images.githubusercontent.com/46578064/85840595-092e5000-b79d-11ea-8662-6559c9b14df6.jpeg" width="400">
 
 to send audio via an http request to nodered and convert it to the right format with [sox-utils](https://github.com/johanneskropf/node-red-contrib-sox-utils):
 
