@@ -76,9 +76,25 @@
 </script>
 
 <script type="text/x-red" data-help-name="voice2json-record-command">
-    <p>A node to record a voice command from a stream of raw audio buffer chunks.</p>
-    <p><strong>Config:</strong><br/>
-    The Voice2Json configuration.</p>
-    <p><strong>Config:</strong><br/>
-    The name of the field in the output message, where the JSON result will be stored.</p>
+    <p><strong>A node that listens to a stream of raw audio buffers to record a voice command
+    and output the command as a single buffer containig wav data.</strong><br/></p>
+    <p><strong>Usage:</strong><br/>
+    This node will listen to a stream of raw audio buffers send to its configured input
+    to record a voice command.
+    The stream needs to have a certain format:<br/>
+    <i>Raw audio, little endian, signed-integer, mono, 16000 Hz, 16 bit.</i><br/>
+    It will send a message to the first output in the configured <code>msg</code> property when
+    it detects silence / the end of the spoken command. The output message is a single
+    buffer containing the spoken command as wav audio in the right format to be processed
+    by the voice2json stt node. If you dont stop the input stream of audio buffers the record
+    process will start again after a 2 second timeout.<br/>
+    </p>
+    <p><strong>Configuration:</strong><br/>
+    You can configure the input and output properties of the <code>msg</code> object that the
+    node listens on and emits messages on. You need to choose a voice2json configuration that the node will
+    use.<br/></p>
+    <p><strong>Further Documentation:</strong><br/>
+    You can find more detailed usage information in the
+    <a href="https://github.com/johanneskropf/node-red-contrib-voice2json/blob/master/README.md">readme
+    </a>.</p>
 </script>

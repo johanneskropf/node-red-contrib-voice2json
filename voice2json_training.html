@@ -100,12 +100,21 @@
 </script>
 
 <script type="text/x-red" data-help-name="voice2json-training">
-    <p>A node to train Voice2Json, based on a specified set of sentences.</p>
-    <p><strong>Voice2Json:</strong><br/>
-    The Voice2Json configuration that needs to be trained.</p>
-    <p><strong>Input field:</strong><br/>
-    The name of the field in the input message, where the <code>train</code> command needs to be specified to start the training.</p>
-    <p><strong>Output field:</strong><br/>
-    The name of the field in the output message, where the JSON result will be stored.</p>
+    <p><strong>A node that can trigger the training process for a voice2json
+    language profile</strong><br/></p>
+    <p><strong>Usage:</strong><br/>
+    The node will start the training process for the choosen voice2json configuration when it receives
+    a payload of <strong>train</strong> in the configured input property of the <code>msg</code>
+    object. It will output a log of the training results as the payload of the configured output property
+    of the <code>msg</code> object.
+    </p>
+    <p><strong>Configuration:</strong><br/>
+    You can configure the input and output properties of the <code>msg</code> object that the
+    node listens on and emits messages on. You need to choose a voice2json configuration that the node will
+    use.<br/></p>
+    <p><strong>Further Documentation:</strong><br/>
+    You can find more detailed usage information in the
+    <a href="https://github.com/johanneskropf/node-red-contrib-voice2json/blob/master/README.md">readme
+    </a>.</p>
 </script>
 

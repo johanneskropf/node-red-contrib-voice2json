@@ -105,9 +105,30 @@
 </script>
 
 <script type="text/x-red" data-help-name="voice2json-wait-wake">
-    <p>Listens for a wakeword in a stream of raw audio buffers</p>
-    <p><strong>Config:</strong><br/>
-    The Voice2Json configuration.</p>
-    <p><strong>Config:</strong><br/>
-    The name of the field in the output message, where the JSON result will be stored.</p>
+    <p><strong>A node that listens to a stream of raw audio buffers to detect a wakeword
+    with voice2json.</strong><br/></p>
+    <p><strong>Usage:</strong><br/>
+    This node will listen to a stream of raw audio buffers send to its configured input
+    to detect a wake-word configured in voice2json.
+    The stream needs to have a certain format:<br/>
+    <i>Raw audio, little endian, signed-integer, mono, 16000 Hz, 16 bit.</i><br/>
+    It will send a message to the first output in the configured <code>msg</code> property when a
+    wake word was detected. When the node receives a message of <strong>stop</strong> in the configured
+    control property of the input <code>msg</code> it will stop the wake word detection process.
+    If you dont stop the input stream of audio buffers the wait wake process will start again after a 2
+    second timeout.<br/>
+    </p>
+    <p><strong>Configuration:</strong><br/>
+    You can configure the input, output and control properties of the <code>msg</code> object that the
+    node listens on and emits messages on. You need to choose a voice2json configuration that the node will
+    use. There is an optional setting to forward stream of raw audio buffers when a wake word was detected.
+    If this option is checked the node will forward the audio stream on its second output when a
+    wake word was detected and ignore further detections. It will do so until
+    it receives a payload of <strong>listen</strong> on
+    its control <code>msg</code> property. It will stop forwarding and go back to listening after
+    that.<br/></p>
+    <p><strong>Further Documentation:</strong><br/>
+    You can find more detailed usage information in the
+    <a href="https://github.com/johanneskropf/node-red-contrib-voice2json/blob/master/README.md">readme
+    </a>.</p>
 </script>

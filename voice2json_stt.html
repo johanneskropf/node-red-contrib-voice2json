@@ -101,24 +101,20 @@
 </script>
 
 <script type="text/x-red" data-help-name="voice2json-stt">
-    <p>A node to offer STT (speech to text) on a single WAV voice fragment via Voice2Json.</p>
-    <p><strong>Voice2Json:</strong><br/>
-    The Voice2Json configuration that will be used by this node.</p>
-    <p><strong>Input field:</strong><br/>
-    The name of the field in the input message, where the following commands can be specified:
-        <ul>
-            <li><code>start</code> to (re)start the transcriber process.</li>
-            <li><code>stop</code> to stop the transcriber process.</li>
-            <li>The WAV fragment, specified in one of the following formats:
-                <ul>
-                    <li><i>A string:</i> the absolute file path of the WAV file.</li>
-                    <li><i>A buffer:</i> the WAV fragment as a binary buffer.</li>
-                </ul>
-            </li>
-        </ul>
-    </p>
-    <p><strong>Output field:</strong><br/>
-    The name of the field in the output message, where the JSON result will be stored.</p>
-    <p><strong>Auto start transcriber:</strong><br/>
-    When selected the transcriber will be started automatically at startup and (re)deploys.</p>
+    <p><strong>A node that transcribes wav data on the basis of a configured voice2json language
+    profile.</strong><br/></p>
+    <p><strong>Usage:</strong><br/>
+    When this node receives wav audio data either as a single buffer containing the data
+    or as a file path to a wav file it will try to transcribe the input on basis of sentences defined
+    in the configured voice2json profile. The input wav data has to have a certain format:<br/>
+    <i>Raw audio, little endian, signed-integer, mono, 16000 Hz, 16 bit.</i><br/>
+    <p><strong>Configuration:</strong><br/>
+    You can configure the input, output and control properties of the <code>msg</code> object that the
+    node listens on and emits messages on. You need to choose a voice2json configuration that the node will
+    use. If the option for auto starting the transcriber is checked the transcription process will
+    auto start on deploy.<br/></p>
+    <p><strong>Further Documentation:</strong><br/>
+    You can find more detailed usage information in the
+    <a href="https://github.com/johanneskropf/node-red-contrib-voice2json/blob/master/README.md">readme
+    </a>.</p>
 </script>
