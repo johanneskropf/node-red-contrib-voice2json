@@ -402,12 +402,31 @@ More information on this approach can be found [here](https://www.zdnet.com/arti
 + This node does not identify voices from different persons, e.g. to support sentences like *"Play my favorite music"*.  You could workaround this by running multiple wake words in parallel, one for each person. But that’s a very resource intensive workaround/hack.
 
 ## Hardware setups
-Some possible hardware setups are being listed here, to get you started.  Each setup will have both advantages and disadvantages...
+Some possible hardware setups are being listed here, to get you started. Each setup will have both advantages and disadvantages. The setups all fit into the flow chart from the top of this readme about the logic of processing something with nodered and voice2json and all the possible input sources.
 
-### Raspberry Zero for voice capture
+### A single do it all device (Raspberry Pi or similar)
+
+The simplest way to set up a complete workflow from wake word to intent processing is a single device running linux that supports both nodered and voice2json. This could for example be the very popular raspberry pi which from model 3 onwards is more than capepable enough to run this combination. As the most basic requirement you will also need some form of microphone. A good start can be cheap usb conference microphones that are linux compatible. Another popular option are the [respeaker pi hats and microphones](https://www.seeedstudio.com/category/Speech-Recognition-c-44.html). You may also want to add a small speaker for sound feedback. You can now set up a complete speech command workflow on this device purely from nodered. Install one of the microphone nodes and connect it to the suite of voive2json nodes streaming raw audio buffers in the right format.
+
+### Master satellite setup with Raspberry Zero for voice capture
 
 When a series of microphones need to be installed in a building, it might become too expensive to use Raspberry Pi (3 or 4) devices.  In those cases one might consider to use Raspberry Pi Zero devices to reduce the cost.  However a single core Raspberry Pi zero is not powerful enough to run wake-word detection.  As a result the Zero will run a Node-RED flow that captures audio from its microphone, and then it will need to send that audio (as a continious stream) to a Raspberry Pi (3 or 4).  That central Raspberry Pi will need to run a Node-RED flow, that needs to do all the Voice2Json processing:
 
 ![Zero setup](https://user-images.githubusercontent.com/14224149/84948181-a4635d80-b0eb-11ea-9fa5-52cbc97c567a.png)
 
 Keep in mind that this setup will result in a large amount of network traffic, even when you are not using speech recognition!  This can only be solved by running the wake-word detection on the device which is connected to the microphone.
+
+### An Apple iOS siri-shortcut to send audio to nodered to be processed by voice2json
+
+You can create a siri-shortcut in the shortcuts app on your iphone or ipad with a content like this:
+
+<img src="(https://user-images.githubusercontent.com/46578064/85840595-092e5000-b79d-11ea-8662-6559c9b14df6.jpeg" width="600">
+
+to send audio via an http request to nodered and convert it to the right format with [sox-utils](https://github.com/johanneskropf/node-red-contrib-sox-utils):
+
+<img src="https://user-images.githubusercontent.com/46578064/85841042-cb7df700-b79d-11ea-9da9-e03481a1566c.jpeg" width="600">
+
+```
+[{"id":"a87acd93.c30f4","type":"http in","z":"6417ff5b.9a455","name":"","url":"/audio","method":"put","upload":false,"swaggerDoc":"","x":130,"y":2080,"wires":[["71abe4b.00b8d1c","94801716.ebafc8"]]},{"id":"71abe4b.00b8d1c","type":"sox-convert","z":"6417ff5b.9a455","name":"","conversionType":"wav","outputToFile":"buffer","manualPath":"","wavMore":true,"wavByteOrder":"-L","wavEncoding":"signed-integer","wavChannels":1,"wavRate":16000,"wavBits":16,"flacMore":false,"flacCompression":8,"flacChannels":1,"flacRate":16000,"flacBits":16,"mp3More":false,"mp3Channels":2,"mp3Rate":44100,"mp3BitRate":128,"oggMore":false,"oggCompression":3,"oggChannels":2,"oggRate":44100,"debugOutput":false,"x":310,"y":2080,"wires":[["d09c9f59.8ed97"],[]]},{"id":"94801716.ebafc8","type":"http response","z":"6417ff5b.9a455","name":"","statusCode":"","headers":{},"x":290,"y":2140,"wires":[]},{"id":"d09c9f59.8ed97","type":"voice2json-stt","z":"6417ff5b.9a455","name":"","voice2JsonConfig":"a66d83bd.16a7d8","inputField":"payload","controlField":"control","outputField":"payload","autoStart":true,"x":500,"y":2080,"wires":[["207c9eec.afe73a"]]},{"id":"207c9eec.afe73a","type":"debug","z":"6417ff5b.9a455","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":690,"y":2080,"wires":[]},{"id":"a66d83bd.16a7d8","type":"voice2json-config","z":"","profilePath":"/home/pi/en-us_kaldi-zamia-2.0","name":"enUsKaldi","sentences":"[GetTime]\nwhat time is it\ntell me the time\n\n[GetTemperature]\nwhats the temperature\nhow (hot | cold) is it\n\n[GetGarageState]\nis the garage door (open | closed)\n\n[ChangeLightState]\nlight_name = ((living room lamp | garage light) {name}) | <ChangeLightColor.light_name>\nlight_state = (on | off) {state}\n\nturn <light_state> [the] <light_name>\nturn [the] <light_name> <light_state>\n\n[ChangeLightColor]\nlight_name = (bedroom light) {name}\n\nset [the] <light_name> [to] $color\nmake [the] <light_name> $color","slots":[{"fileName":"rhasspy/number","managedBy":"external","fileContent":null,"executable":true},{"fileName":"color","managedBy":"external","fileContent":null,"executable":false}],"removeSlots":true}]
+```
+**This approach will work for any audio source that can send an audio file in a convertible format to nodered over an http request, mqtt or a websocket.**
