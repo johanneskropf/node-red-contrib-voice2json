@@ -34,7 +34,7 @@ docker run -i \
 More information about this can be found below in the section *"Notes on minimizing SD card wear in voice2jsons file based workflow"*.
 
 ### Language profile installation
-To be able to start voice recognition, a language profile needs to be installed.  Download the profile of your preferred language, from the [list](http://voice2json.org/#supported-languages) of supported languages.  The directory - where the language profile is stored - needs to be entered in the config node screen (see further).
+To be able to start voice recognition, a language profile needs to be installed.  Download the profile of your preferred language, from the [list of supported languages](http://voice2json.org/#supported-languages).  The directory - where the language profile is stored - needs to be entered in the config node screen (see further).
 
 Remark: When using the Voice2Json Docker container, make sure the language profile is stored somewhere in your home directory.  Otherwise Voice2Json will not be able to access it from its Docker container.  If that is not possible, you will need to make the path accessible for the Docker container, by adding an additional `-v` argument in the above Voice2Json Docker run bash script.
 
