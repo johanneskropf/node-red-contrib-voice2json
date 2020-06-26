@@ -101,13 +101,25 @@
 </script>
 
 <script type="text/x-red" data-help-name="voice2json-stt">
-    <p><strong>A node that transcribes wav data on the basis of a configured voice2json language
+    <p><strong>A node to support speech-to-text (STT), which transcribes wav data on the basis of a configured voice2json language
     profile.</strong><br/></p>
     <p><strong>Usage:</strong><br/>
-    When this node receives wav audio data either as a single buffer containing the data
-    or as a file path to a wav file it will try to transcribe the input on basis of sentences defined
-    in the configured voice2json profile. The input wav data has to have a certain format:<br/>
-    <i>Raw audio, little endian, signed-integer, mono, 16000 Hz, 16 bit.</i><br/>
+    When this node receives wav audio data in the <code>input field</code> of the input message:
+    <ul>
+        <li>As a single <i>buffer</i> containing the voice data.</li>
+        <li>As a <i>file path</i> to a wav file.</li>
+    </ul>
+    Then this node will try to transcribe the input data, based on the sentences defined in the configured voice2json profile.</p>
+    <p> Note that the input wav data has to have a certain format:
+    <ul>
+        <li>Raw audio</li>
+        <li>little endian</li>
+        <li>signed-integer</li>
+        <li>mono</li>
+        <li>16000 Hz</li>
+        <li>16 bit</li>
+    </ul>
+    The recognized text result will be send in the <code>output field</code> of the output message.</p>
     <p><strong>Configuration:</strong><br/>
     You can configure the input, output and control properties of the <code>msg</code> object that the
     node listens on and emits messages on. You need to choose a voice2json configuration that the node will
