@@ -108,7 +108,7 @@
     The node will auto start the recognizer process if it isn't running when input arrives, which means
     the first recognition will take longer.</p>
     <p>However you can start the recognizer process in advance, with a payload of <strong>"start"</strong> in the 
-    configured control property of the input message ahead of time to make the first parsing/extraction faster.
+    configured control property of the input message to make the first parsing/extraction faster.
     Once started the recognizer process will run in the background and parse strings as they arrive.
     The process can also be restarted with this <strong>"start"</strong> message (e.g. after training to pick
     up the changes to the sentences). It can be stopped at any time with an input <code>msg</code> containing
