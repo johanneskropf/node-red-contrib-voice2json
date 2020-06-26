@@ -188,7 +188,7 @@ The config node contains the following information:
    (what | how) is the weather (<day> | on ($weekday){weekday})
    ```
    
-   + ***Please read the [official documetation on the grammar on the voice2json website](http://voice2json.org/sentences.html) as this setion only gave a brief overview of the capabilities.***
+ + ***Please read the [official documentation on the grammar on the voice2json website](http://voice2json.org/sentences.html) as this setion only gave a brief overview of the capabilities.***
 
 ### Training node
 
