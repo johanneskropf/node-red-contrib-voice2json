@@ -81,12 +81,19 @@
     <p><strong>Usage:</strong><br/>
     This node will listen to a stream of raw audio buffers send to its configured input
     to record a voice command.
-    The stream needs to have a certain format:<br/>
-    <i>Raw audio, little endian, signed-integer, mono, 16000 Hz, 16 bit.</i><br/>
+    Note that the input stream needs to have a certain format:<br/>
+    <ul>
+        <li>Raw audio</li>
+        <li>little endian</li>
+        <li>signed-integer</li>
+        <li>mono</li>
+        <li>16000 Hz</li>
+        <li>16 bit</li>
+    </ul>
     It will send a message to the first output in the configured <code>msg</code> property when
     it detects silence / the end of the spoken command. The output message is a single
     buffer containing the spoken command as wav audio in the right format to be processed
-    by the voice2json stt node. If you dont stop the input stream of audio buffers the record
+    by the voice2json stt node. If you dont stop the input stream of audio buffers, the record
     process will start again after a 2 second timeout.<br/>
     </p>
     <p><strong>Configuration:</strong><br/>
