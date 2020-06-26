@@ -97,21 +97,22 @@
 </script>
 
 <script type="text/x-red" data-help-name="voice2json-tti">
-    <p><strong>A node that extracts intents from an input string on basis of the sentences configured
+    <p><strong>A node that extracts intents from an input string based on the sentences configured
     in the selected voice2json profile.</strong><br/></p>
     <p><strong>Usage:</strong><br/>
     The node will try to parse a plain text string send to it in the configured input property of the
-    <code>msg</code> object (eg from the stt node) to extract an intent on basis of the
-    sentences configured in the selected voice2json profile configuration.
-    It will emit an object including information about the result and any recognized intent
-    or found slots to the configured output property of the <code>msg</code> object.
-    The node will auto start the recognizer process if it isnt running when input arrives.
-    You can start the recognizer process with a payload of <strong>start</strong> in the configured
-    control property of the input message ahead of time to make the first parsing/extraction faster.
-    Once started the recognizer process will run in the background and parse strings as they come in.
-    The process can also be restarted with this <strong>start</strong> message (eg after training to pick
-    up the changes to the sentences). It can be stopped at any time with a <code>msg</code> containing
-    <strong>stop</strong> in the configured control property.<br/></p>
+    <code>msg</code> object (which it gets e.g. from the stt node) to extract an intent, based on the
+    sentences configured in the selected voice2json profile configuration.</p>
+    <p>It will send an output message, containing information (about the result and any recognized intent
+    or found slots) in the configured output property of the output <code>msg</code> object.
+    The node will auto start the recognizer process if it isn't running when input arrives, which means
+    the first recognition will take longer.</p>
+    <p>However you can start the recognizer process in advance, with a payload of <strong>"start"</strong> in the 
+    configured control property of the input message ahead of time to make the first parsing/extraction faster.
+    Once started the recognizer process will run in the background and parse strings as they arrive.
+    The process can also be restarted with this <strong>"start"</strong> message (e.g. after training to pick
+    up the changes to the sentences). It can be stopped at any time with an input <code>msg</code> containing
+    <strong>"stop"</strong> in the configured control property.<br/></p>
     <p><strong>Configuration:</strong><br/>
     You can configure the input, output and control properties of the <code>msg</code> object that the
     node listens on and emits messages on. You need to choose a voice2json configuration that the node will
