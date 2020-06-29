@@ -27,7 +27,7 @@
         this.profilePath = "";
         this.statusTimer = false;
         this.statusTimer2 = false;
-        this.pauseListen = false;
+        this.pauseListening = false;
         this.initialTimeout = false;
         this.initialTimeoutTimer = false;
         var node = this;
@@ -102,6 +102,7 @@
                 node.warn("stopped");
                 delete node.waitWake;
                 node_status(["stopped","grey","ring"],1500,["waiting for audio","grey","ring"]);
+                if (node.pauseListening) { node.pauseListening = false; }
                 return;
                 
             });
