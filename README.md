@@ -8,6 +8,8 @@ The [voice2json](http://voice2json.org/) project offers a collection of command 
 
 Thanks to [Bart Butenaers](https://github.com/bartbutenaers), my partner in crime for this node!  He came up with the crazy idea that I should get involved in this business of node-red node development, and without his knowledge and his huge contribution to this node it wouldn't be here today.
 
+***:warning: Have a look at the [step by step tutorial](https://github.com/johanneskropf/node-red-contrib-voice2json/wiki/Getting-started---Step-by-step-tutorial) on our wiki page to get started with these nodes!***
+
 ## Install
 Run the following npm command in your Node-RED user directory (typically ~/.node-red):
 ```
