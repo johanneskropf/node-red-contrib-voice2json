@@ -25,7 +25,7 @@ If you want to use node-red-contrib-voice2json with a docker install you have to
 #!/usr/bin/env bash
 docker run -i \
        -v "${HOME}:${HOME}" \
-       -v “/dev/shm/:/dev/shm/“ \
+       -v "/dev/shm/:/dev/shm/" \
        -w "$(pwd)" \
        -e "HOME=${HOME}" \
        --user "$(id -u):$(id -g)" \
