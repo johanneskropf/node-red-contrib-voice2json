@@ -73,8 +73,8 @@
             try {
                 const fileInfo = execSync("file " + filePath).toString();
             } catch (error) {
-                node.error("couldnt check file for properties");
-                (node.transcribeWav) ? node_status(["error","red","dot"],1500,["running","blue","ring"]) : node_status(["error","red","dot"]);
+                node.warn("couldnt check file for properties, continuing anyway. We recommend installing file (sudo apt-get install file) if you want input files to be validated before processing.)");
+                return true;
             }
             const fileInfo = execSync("file " + filePath).toString();
             if (!fileInfo.match(/WAVE audio/g)) { reasons += "not a wav file\n"; }
