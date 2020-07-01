@@ -17,23 +17,10 @@ npm install johanneskropf/node-red-contrib-voice2json
 ```
 
 ### Voice2Json installation
-Install voice2json on the same machine as nodered. Detailed instructions can be found in the [voice2json documentation](http://voice2json.org/install.html), two install Voice2Json in one of the following ways:
+Install voice2json on the same machine as nodered. Detailed instructions can be found in the [voice2json documentation](http://voice2json.org/install.html), too install Voice2Json in one of the following ways:
 
 1. As a (pre-compiled) Debian package.
 2. As a Docker container.
-
-If you want to use node-red-contrib-voice2json with a docker install you have to adapt the supplied bash script (from the Voice2Json documentation) to include the line `-v “/dev/shm/:/dev/shm/“ \`.  This means the entire script will look like this:
-```
-#!/usr/bin/env bash
-docker run -i \
-       -v "${HOME}:${HOME}" \
-       -v "/dev/shm/:/dev/shm/" \
-       -w "$(pwd)" \
-       -e "HOME=${HOME}" \
-       --user "$(id -u):$(id -g)" \
-       synesthesiam/voice2json "$@"
-```
-More information about this can be found below in the section *"Notes on minimizing SD card wear in voice2jsons file based workflow"*.
 
 ### Language profile installation
 To be able to start voice recognition, a language profile needs to be installed.  Download the profile of your preferred language, from the [list of supported languages](http://voice2json.org/#supported-languages).  The directory - where the language profile is stored - needs to be entered in the config node screen (see further).
