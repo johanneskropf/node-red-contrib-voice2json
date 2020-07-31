@@ -1,6 +1,6 @@
 {
     "name": "node-red-contrib-voice2json",
-    "version": "1.0.0",
+    "version": "0.6.0",
     "description": "Node-RED nodes for local speech and intent recognition via voice2json",
     "dependencies": {
     },
@@ -37,6 +37,7 @@
             "voice2json-training": "voice2json_training.js",
             "voice2json-tti": "voice2json_tti.js",
             "voice2json-record-command": "voice2json_record.js",
+            "voice2json-transcribe-stream": "voice2json_transcribestream.js",
             "voice2json-wait-wake": "voice2json_wakeword.js"
         }
     }
