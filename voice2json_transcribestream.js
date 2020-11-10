@@ -89,6 +89,11 @@
                 return;
             });
             
+            node.transcribeStream.stdin.on('error', (error)=>{
+                node.warn("stdin error: " + error);
+                return;
+            })
+            
             node.transcribeStream.on('close', function (code,signal) {
                 
                 node_status(["finished","green","dot"],1500);
@@ -112,9 +117,6 @@
                 }
             
                 node.send(msg);
-                
-                //node.transcribeStream.kill();
-                //delete node.transcribeStream;
                 
             });
             return;

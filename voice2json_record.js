@@ -88,6 +88,11 @@
                 return;
             });
             
+            node.recordCommand.stdin.on('error', (error)=>{
+                node.warn("stdin error: " + error);
+                return;
+            })
+            
             node.recordCommand.on('close', function (code,signal) {
                 
                 node.outputBuffer = Buffer.concat(node.outputBufferArr);

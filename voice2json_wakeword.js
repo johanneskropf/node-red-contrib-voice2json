@@ -97,6 +97,11 @@
                 return;
             });
             
+            node.waitWake.stdin.on('error', (error)=>{
+                node.warn("stdin error: " + error);
+                return;
+            })
+            
             node.waitWake.on('close', function (code,signal) {
                 
                 node.warn("stopped");
@@ -232,7 +237,7 @@
 			        return;
 			        
 			}
-            
+
         });
         
         node.on("close",function() {
