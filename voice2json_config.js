@@ -55,7 +55,6 @@
             // Remove the file if it has not been specified anymore in the node.slots array
             if (specifiedFiles.length === 0) {
                 var slotFileToRemove = path.join(directory, currentSlotFile);
-                
                 try {
                     fs.unlinkSync(slotFileToRemove);
                 }
@@ -73,6 +72,7 @@
         this.profilePath = config.profilePath;
         this.slots       = config.slots;
         this.removeSlots = config.removeSlots;
+        this.profile    = config.profile;
         
         var node = this;
        
@@ -86,6 +86,19 @@
             }
             catch(err){
                 console.log("Cannot write to sentences file (" + sentencesFilePath + "): " + err);
+            }
+        }
+        
+        //bare bones save to file implementation if profile.yml was loaded
+        var profileFilePath = path.join(node.profilePath, "profile.yml");
+
+        // Only store the profile if available, otherwise we risc to loose the original profile.yml file
+        if (node.profile) {
+            try{
+                fs.writeFileSync(profileFilePath, node.profile);
+            }
+            catch(err){
+                console.log("Cannot write to profile file (" + profile FilePath + "): " + err);
             }
         }
         
@@ -177,7 +190,6 @@
             }
             
             if (fs.existsSync(checkSlotFilePath)) {
-                
                 try {
                     fs.unlinkSync(checkSlotFilePath);
                 }
@@ -190,6 +202,7 @@
 
             // Write the specified content to the slot files (only for files that are managed by Node-RED)
             if (slot.managedBy === "nodered") {
+                
                 try {
                     fs.writeFileSync(slotFilePath, slot.fileContent);
                 } 
@@ -202,6 +215,7 @@
             // The slot file can be executable or not.
             // We make it executable/readable/writable (777) for the owner/group/others.
             fs.chmodSync(slotFilePath, 0o777);
+        
         });
         
         node.on('close', function(){
@@ -260,6 +274,17 @@
         
         // Send both arrays to the client
         res.send({slotNames:slotNames, slotProgramNames:slotProgramNames}, {}, function(err) {
+            if(err) {
+                res.status(err.status).end()
+            }
+        });
+    });
+    
+    RED.httpAdmin.get("/voice2json-config/loadProfile", RED.auth.needsPermission('voice2json-config.read'), function(req, res){
+        var filePath = path.join(req.query.profilePath, "profile.yml");
+        
+        // Load the profile file from the filesystem
+        res.sendFile(filePath, {}, function(err) {
             if(err) {
                 res.status(err.status).end()
             }

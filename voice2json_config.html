@@ -66,7 +66,8 @@
                 // Not valid if duplicate file names
                 return !isDuplicate;
             }},
-            removeSlots: {value:false}
+            removeSlots: {value:false},
+            profile: {value:null}
         },
         inputs:1,
         outputs:1,
@@ -78,19 +79,34 @@
             var node = this;
             if (!node.sentences) {
                 //initial text before file was loaded
-                node.sentences = "// Click the load sentences button.\n"+
+                node.ogSentences = "// Click the load sentences button.\n"+
                                  "// This will load the content of the sentences.ini\n"+
                                  "// Changes will only be saved to the file\n"+
                                  "// if you deploy after editing.\n"+
                                  "// Enter sentences (= voice commands) Node-RED should recognize.\n" +
                                  "// The sentences have to be written in a dedicated templating language.\n" +
                                  "// See the language syntax on http://voice2json.org/sentences.html";
+            } else {
+                node.ogSentences = node.sentences;
+            }
+            
+            if (!node.profile) {
+                //initial text before file was loaded
+                node.ogProfile = "// Click the load profile button.\n"+
+                                 "// This will load the content of the profile.yml\n"+
+                                 "// Changes will only be saved to the file\n"+
+                                 "// if you deploy after editing.\n"+
+                                 "// Enter settings as per the voice2json documentation.\n" +
+                                 "// You can find this documetation with available settings\n" +
+                                 "// at voice2json.org.";
+            } else {
+                node.ogProfile = node.profile;
             }
             
             node.aceEditorSentences = RED.editor.createEditor({
                 id: 'aceDivSentences',
                 mode: 'ace/mode/text',
-                value: node.sentences,
+                value: node.ogSentences,
                 globals: { 
                     msg:true,
                     context:true,
@@ -134,6 +150,30 @@
             node.aceEditorSlot.setFontSize(14);
             // By default no slot is being visualized in the ace editor
             setAceEditorReadOnly(node.aceEditorSlot, true);
+            
+            //profile ace
+            node.aceEditorProfile = RED.editor.createEditor({
+                id: 'aceDivProfile',
+                mode: 'ace/mode/yaml',
+                value: node.ogProfile,
+                globals: { 
+                    msg:true,
+                    context:true,
+                    RED: true,
+                    util: true,
+                    flow: true,
+                    global: true,
+                    console: true,
+                    Buffer: true,
+                    setTimeout: true,
+                    clearTimeout: true,
+                    setInterval: true,
+                    clearInterval: true
+                }
+            });
+            node.aceEditorProfile.clearSelection();
+            node.aceEditorProfile.focus();
+            node.aceEditorProfile.setFontSize(14);
             
             // Create a table of slots
             var slotsList = $("#node-input-slots-container").css('height','200px').css('min-height','200px').css('min-width','450px').editableList({
@@ -515,7 +555,39 @@
                 })
 	        });
             
-            // Show two tabsheets
+            $("#node-load-profile").click(function () {
+                var currentProfile = node.aceEditorProfile.getValue();
+                
+                if (currentProfile && currentProfile !== "") {
+                    if (!confirm("The current profile.yml will be overwritten!  Are you sure to continue?")) {
+                        // The user has clicked the 'Cancel' button
+                        return;
+                    }
+                }
+                
+	            //get content of profile
+                let loadProfilePath = $("#node-config-input-profilePath").val();
+	            $.ajax({
+                    url: "voice2json-config/loadProfile",
+                    type: "GET",
+                    contentType: "application/json",
+                    data: {
+                        profilePath:loadProfilePath
+                    },
+                    dataType : "text",
+                    success: function(data, textStatus, request) {
+                        node.aceEditorProfile.setValue(data);
+                        node.aceEditorProfile.clearSelection();
+                        setAceEditorReadOnly(node.aceEditorProfile, false);
+                        node.originalProfile = data;                                    
+                    },
+                    error: function(XMLHttpRequest, textStatus, errorThrown) { 
+                        alert("Cannot load the profile.yml file: " + errorThrown); 
+                    } 
+                })
+	        });
+            
+            // Show three tabsheets
             var tabs = RED.tabs.create({
                 id: "node-tabsheet-tabs",
                 onchange: function(tab) {
@@ -532,16 +604,31 @@
                 id: "node-slots-tab",
                 label: "Slots"
             });
+            tabs.addTab({
+                id: "node-profile-tab",
+                label: "Profile"
+            });
         },
         oneditsave: function() {
             var node = this;
             let loadProfilePath = $("#node-config-input-profilePath").val();
             
             //get the content of ace and check if the sentences.ini was loaded and changed
-            node.sentences = node.aceEditorSentences.getValue();
+            if (node.ogSentences !== node.aceEditorSentences.getValue()) {
+                node.sentences = node.aceEditorSentences.getValue();
+            }
 		    
             node.aceEditorSentences.destroy();
             node.aceEditorSentences = null;
+            
+            //get the content of ace and check if the profile.yml was loaded and changed
+            if (node.ogProfile !== node.aceEditorProfile.getValue()) {
+                node.profile = node.aceEditorProfile.getValue();
+            }
+		    
+            node.aceEditorProfile.destroy();
+            node.aceEditorProfile = null;
+            
             
             // If some slot was being displayed, lets store the content of the ace editor into that slot
             var selectedSlotRow = getSelectedSlotRow();
@@ -594,6 +681,8 @@
             var node = this;
             node.aceEditorSentences.destroy();
             node.aceEditorSentences = null;
+            node.aceEditorProfile.destroy();
+            node.aceEditorProfile = null;
         }
     });
 </script>
@@ -637,12 +726,21 @@
                 </button>
                 <div class="form-row">
                     <!-- Ace editor -->
-                    <div id="aceDivSlot" style="width: 100%; height: 200px; min-height:200px;"></div>
+                    <div id="aceDivSlot" style="width: 100%; height: 400px; min-height:300px;"></div>
                 </div>
                 <br>
                 <div class="form-row">
                     <input type="checkbox" id="node-config-input-removeSlots" style="display: inline-block; width: auto; vertical-align: top;">
                     <label for="node-config-input-removeSlots" style="width:70%;"> Automatically remove slot files not listed on this screen</label>
+                </div>
+            </div>
+            <div id="node-profile-tab">
+                <button id="node-load-profile" class="editor-button editor-button-small" style="margin-top: 4px;" title="Load profile.yml file">
+                    <i class="fa fa-download"></i>
+                </button>
+                <div class="form-row">
+                    <!-- Ace editor -->
+                    <div id="aceDivProfile" style="width: 100%; height: 450px; min-height:350px;"></div>
                 </div>
             </div>
         </div>
