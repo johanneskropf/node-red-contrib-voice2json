@@ -98,7 +98,7 @@
                 fs.writeFileSync(profileFilePath, node.profile);
             }
             catch(err){
-                console.log("Cannot write to profile file (" + profile FilePath + "): " + err);
+                console.log("Cannot write to profile file (" + profileFilePath + "): " + err);
             }
         }
         
