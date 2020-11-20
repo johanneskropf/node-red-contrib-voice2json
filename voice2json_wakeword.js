@@ -28,6 +28,7 @@
         this.statusTimer = false;
         this.statusTimer2 = false;
         this.pauseListening = false;
+        this.forwardIt = false;
         this.initialTimeout = false;
         this.initialTimeoutTimer = false;
         var node = this;
@@ -115,8 +116,9 @@
             node.waitWake.stdout.on('data', (data)=>{
                 if (!node.pauseListening && node.nonContinousListen) {
                     node.pauseListening = true;
-                } else if (node.pauseListening && node.nonContinousListen) {
-                    node.warn("wake-word detetected but ignoring as as audio is already beeing forwarded");
+                    node.forwardIt = true;
+                } else if (node.pauseListening) {
+                    node.warn("wake-word detetected but ignoring as as audio is already beeing forwarded or listening paused");
                     return;
                 }
                 
@@ -216,18 +218,73 @@
                     return;
                     
                 case "listen":
-                
+                    
+                    if(!node.waitWake){
+                        node.warn("not started yet");
+                        return;
+                    }              
                     if(node.pauseListening === true){
                         node.pauseListening = false;
+                        node.forwardIt = false;
                         node_status(["listening to stream","blue","dot"]);
                     } else {
                         node.warn("already listening");
                     }
                     return;
                     
+                case "pause":
+                
+                    if(!node.waitWake){
+                        node.warn("not started yet");
+                        return;
+                    } 
+                    if(node.pauseListening === false){
+                        node.pauseListening = true;
+                        node_status(["paused listening","blue","dot"]);
+                    } else {
+                        node.warn("already paused");
+                    }
+                    return;
+                   
+                case "forward":
+                
+                    if(!node.waitWake){
+                        node.warn("not started yet");
+                        return;
+                    } 
+                    if(node.forwardIt === false){
+                        node.forwardIt = true;
+                        if (node.pauseListening === false) {
+                            node_status(["listening to stream and forwarding audio","blue","dot"]);
+                        } else {
+                            node_status(["paused and forwarding audio","blue","dot"]);
+                        }
+                    } else {
+                        node.warn("already forwarding");
+                    }
+                    return;
+                    
+                case "stop_forward":
+                
+                    if(!node.waitWake){
+                        node.warn("not started yet");
+                        return;
+                    } 
+                    if(node.forwardIt === true){
+                        node.forwardIt = false;
+                        if (node.pauseListening === true) {
+                            node_status(["paused listening","blue","dot"]);
+                        } else {
+                            node_status(["listening to stream","blue","dot"]);
+                        }
+                    } else {
+                        node.warn("already paused");
+                    }
+                    return;
+                    
                 default:
             
-                    if(node.pauseListening) { node.send([null,msg]) } 
+                    if(node.forwardIt) { node.send([null,msg]) } 
 	                if(!node.waitWake){
 	                    node.warn("starting")
 	                    spawnWake();
