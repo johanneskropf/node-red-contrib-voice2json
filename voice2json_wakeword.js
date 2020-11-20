@@ -223,7 +223,7 @@
                         node.warn("not started yet");
                         return;
                     }              
-                    if(node.pauseListening === true){
+                    if(node.pauseListening === true || node.forwardIt === true){
                         node.pauseListening = false;
                         node.forwardIt = false;
                         node_status(["listening to stream","blue","dot"]);
