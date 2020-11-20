@@ -1,6 +1,6 @@
 {
     "name": "node-red-contrib-voice2json",
-    "version": "0.7.0",
+    "version": "0.7.1",
     "description": "Node-RED nodes for local speech and intent recognition via voice2json",
     "dependencies": {
     },
