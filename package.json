@@ -1,44 +1,30 @@
 {
-    "name": "node-red-contrib-voice2json",
-    "version": "0.7.1",
-    "description": "Node-RED nodes for local speech and intent recognition via voice2json",
-    "dependencies": {
-    },
-    "author": {
-        "name": "Johannes Kropf"
-    },
-    "contributors": [
-        {
-            "name": "Bart Butenaers",
-            "url": "https://github.com/bartbutenaers"
-        }
-    ],
-    "license": "Apache-2.0",
-    "keywords": [
+  "name": "node-red-contrib-sox-utils",
+  "version": "0.3.1",
+  "description": "a node-red wrapper for some of the sox commandline utils play and record functionality",
+  "author": "Johannes Kropf",
+  "license": "Apache-2.0",
+  "keywords": [
         "node-red",
-        "voice2json",
-        "stt",
-        "nlu",
-        "kaldi",
-        "precise"
-    ],
-    "bugs": {
-        "url": "https://github.com/johanneskropf/node-red-contrib-voice2json/issues"
-    },
-    "homepage": "https://github.com/johanneskropf/node-red-contrib-voice2json",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/johanneskropf/node-red-contrib-voice2json.git"
-    },
-    "node-red": {
+        "sox",
+        "microphone",
+        "speaker",
+        "record",
+        "play",
+        "audio",
+        "sound",
+        "wav",
+        "convert"
+  ],
+  "repository": {
+       "type": "git",
+       "url": "https://github.com/johanneskropf/node-red-contrib-sox-utils.git"
+  },
+  "node-red": {
         "nodes": {
-            "voice2json-config": "voice2json_config.js",
-            "voice2json-stt": "voice2json_stt.js",
-            "voice2json-training": "voice2json_training.js",
-            "voice2json-tti": "voice2json_tti.js",
-            "voice2json-record-command": "voice2json_record.js",
-            "voice2json-transcribe-stream": "voice2json_transcribestream.js",
-            "voice2json-wait-wake": "voice2json_wakeword.js"
+            "sox-record": "sox_record.js",
+            "sox-play": "sox_play.js",
+            "sox-convert": "sox_convert.js"
         }
     }
 }
