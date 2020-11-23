@@ -122,9 +122,10 @@
     control property of the input <code>msg</code> it will forward the input audio to its second 
     output. When the node receives a message of <strong>stop_forward</strong> in the configured
     control property of the input <code>msg</code> it will stop forwarding the input audio to the 
-    second output. When the node receives a message of <strong>listen</strong> in the configured
+    second output. When the node receives a message of <strong>stop_pause</strong> in the configured
     control property of the input <code>msg</code> it will unpause if paused. The 
-    <strong>listen</strong> command will also stop forwarding.<br/>
+    <strong>listen</strong> command in the configured control property of the input <code>msg</code>
+    will do both unpause and also stop forwarding.<br/>
     </p>
     <p><strong>Configuration:</strong><br/>
     You can configure the input, output and control properties of the <code>msg</code> object that the
