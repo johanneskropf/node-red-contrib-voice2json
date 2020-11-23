@@ -245,6 +245,20 @@
                         node.warn("already paused");
                     }
                     return;
+                    
+                case "stop_pause":
+                
+                    if(!node.waitWake){
+                        node.warn("not started yet");
+                        return;
+                    } 
+                    if(node.pauseListening === true){
+                        node.pauseListening = false;
+                        node_status(["listening to stream","blue","dot"]);
+                    } else {
+                        node.warn("not paused");
+                    }
+                    return;
                    
                 case "forward":
                 
